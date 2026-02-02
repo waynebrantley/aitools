@@ -1,0 +1,10 @@
+{
+  "name": "fix-unit-tests-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Testing scripts for fix-unit-tests skill",
+  "private": true,
+  "devDependencies": {
+    "glob": "^11.0.0"
+  }
+}

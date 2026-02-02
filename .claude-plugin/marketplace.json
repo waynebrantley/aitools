@@ -1,0 +1,13 @@
+{
+  "name": "waynebrantley-aitools",
+  "owner": {
+    "name": "Wayne Brantley"
+  },
+  "plugins": [
+    {
+      "name": "ai-tools",
+      "source": "./plugins/ai-tools",
+      "description": "Productivity skills and utilities for enhanced Claude Code workflows"
+    }
+  ]
+}
