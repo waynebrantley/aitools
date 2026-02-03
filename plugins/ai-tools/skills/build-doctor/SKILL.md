@@ -21,16 +21,25 @@ Systematically fix build errors using parallel subagents with intelligent coordi
 
 ## Warning Handling
 
-**⚠️ Warnings are treated as errors by default.** This skill enforces zero-warning builds to maintain code quality.
+**⚠️ ALL WARNINGS MUST BE FIXED - This is a ZERO-WARNING skill.**
+
+This skill enforces zero-warning builds to maintain code quality. **"Not blocking build" is NOT an acceptable reason to leave warnings unfixed.**
 
 **Framework-Specific Behavior:**
 
-- **TypeScript/JavaScript**: All warnings from ESLint, TypeScript compiler, and build tools must be fixed
-- **.NET**: All warnings must be fixed, **except** for excluded warning codes (see below)
+- **TypeScript/JavaScript**: ALL warnings from ESLint, TypeScript compiler, and build tools must be fixed
+- **.NET**: ALL warnings must be fixed, **except** for the two explicitly excluded codes below
 
-**Excluded .NET Warnings:**
+**Excluded .NET Warnings (ONLY these two):**
 - `NU1902`: NuGet package vulnerability warnings (often cannot be immediately fixed due to upstream dependencies)
 - `DX1000`: DevExpress evaluation license warnings (requires commercial license purchase)
+
+**CRITICAL**: If ANY other warning code appears (e.g., xUnit1026, CS0618, etc.), it MUST be fixed. Do NOT skip warnings just because they don't block the build.
+
+**If a warning cannot be fixed:**
+1. Document WHY it cannot be fixed (technical blocker, not just "doesn't block build")
+2. Ask the user if this warning code should be added to exclusions
+3. Do NOT mark the skill as successful until resolved
 
 To exclude additional warning codes, modify the `.NET adapter` configuration.
 
@@ -311,11 +320,19 @@ node scripts/run-final-build.mjs '<detection-object-json>'
 
 **.NET Workflow Note**: The discovery/fixing phase builds **Debug configuration only** (where most warnings appear). Final validation then builds **both Debug and Release** to confirm all configurations are clean.
 
-If issues remain:
-- Identify which files still have errors
-- Create new file-specific todos
-- Spawn fix subagents for those files only
-- Repeat (max 2 cycles for .NET, since verification is expensive)
+**If warnings remain after fixes:**
+1. **Identify warning codes**: Parse which specific warning codes remain (e.g., xUnit1026, CS0618)
+2. **Check exclusion list**: Only NU1902 and DX1000 are acceptable
+3. **If NOT in exclusion list**:
+   - Create new file-specific todos for files with these warnings
+   - Spawn fix subagents to address them
+   - Repeat (max 2 cycles for .NET, since verification is expensive)
+4. **If warnings CANNOT be fixed**:
+   - Document the technical blocker (NOT just "doesn't block build")
+   - Ask user if this warning code should be excluded
+   - Do NOT mark skill as successful
+
+**CRITICAL**: "Not blocking build" is NOT a valid reason to accept warnings. ALL warnings must be fixed or explicitly excluded.
 
 ---
 
@@ -356,9 +373,13 @@ Auto-detection via `detect-build-environment.mjs`:
 - Validation: `dotnet format --verify-no-changes` (only if detected in GitHub workflows)
 - Patterns: `**/*.cs`, `**/*.csproj`, `**/*.sln`, `**/*.slnx`
 - Verification: **Deferred to final build** - DO NOT run `dotnet build` during fixing phase
-- Warning Treatment: All warnings treated as errors except NU1902 (NuGet vulnerabilities) and DX1000 (DevExpress license)
+- Warning Treatment: **ALL warnings treated as errors** except NU1902 (NuGet vulnerabilities) and DX1000 (DevExpress license)
+- **Success means ZERO warnings** except NU1902/DX1000 - "not blocking build" is NOT acceptable
 
-**CRITICAL .NET Rule**: After initial discovery, fix ALL files without building, then run ONE final build to verify all fixes together.
+**CRITICAL .NET Rules**:
+1. After initial discovery, fix ALL files without building, then run ONE final build to verify
+2. Fix ALL warnings (xUnit1026, CS0618, etc.) - only NU1902 and DX1000 are excluded
+3. If warnings remain, they MUST be fixed or explicitly discussed with user
 
 **Key .NET Behaviors:**
 - If `.sln` or `.slnx` file exists, `.csproj` files are ignored (solution contains all projects)
@@ -525,6 +546,7 @@ Each fix subagent MUST:
 - ❌ Exceed MAX_PARALLEL limit
 - ❌ Skip file-level verification (TypeScript only - .NET verifies at end)
 - ❌ **Run `dotnet build` during .NET fixing phase** (wait for final validation)
+- ❌ **Accept warnings just because they "don't block build"** (fix ALL warnings!)
 - ❌ Comment out code to "fix" build errors
 - ❌ Modify multiple files per subagent
 
@@ -541,17 +563,20 @@ Each fix subagent MUST:
 
 ## Success Criteria
 
-Skill succeeds when all checks pass (framework-specific):
+**Skill succeeds ONLY when all checks pass with ZERO warnings (except explicitly excluded codes).**
 
 **TypeScript/JavaScript**:
-- `tsc --noEmit` passes with zero warnings (type checking)
-- `eslint --max-warnings=0` passes (linting, zero warnings)
-- `npm/pnpm/yarn run build` passes with zero warnings (build)
+- ✅ `tsc --noEmit` passes with **zero warnings** (type checking)
+- ✅ `eslint --max-warnings=0` passes (linting, **zero warnings**)
+- ✅ `npm/pnpm/yarn run build` passes with **zero warnings** (build)
 
 **.NET**:
-- `dotnet build` passes with zero warnings (except excluded codes)
-- `dotnet format --verify-no-changes` passes (only if used in GitHub workflows)
-- Excluded warnings: NU1902 (NuGet package vulnerabilities)
+- ✅ `dotnet build` passes with **zero warnings** (except NU1902 and DX1000 only)
+- ✅ `dotnet format --verify-no-changes` passes (only if used in GitHub workflows)
+- ✅ **Only acceptable warnings**: NU1902 (NuGet vulnerabilities), DX1000 (DevExpress license)
+- ❌ **All other warnings MUST be fixed** (xUnit1026, CS0618, etc.)
+
+**CRITICAL**: If ANY warning code appears that is NOT in the exclusion list (NU1902, DX1000), the skill has NOT succeeded. Fix the warnings or document why they cannot be fixed and ask user for guidance.
 
 ---
 
