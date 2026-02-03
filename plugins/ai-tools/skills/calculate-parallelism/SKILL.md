@@ -122,7 +122,7 @@ LOAD_REDUCTION_FACTOR = 50       // Reduction % when saturated
 ## Used By
 
 - **fix-unit-tests** - Parallel test file fixing
-- **parallel-subagent-workflow** - Generic parallel execution
+- **parallel-coding-workflow** - Generic parallel execution
 - Any skill spawning multiple concurrent subagents
 
 ---

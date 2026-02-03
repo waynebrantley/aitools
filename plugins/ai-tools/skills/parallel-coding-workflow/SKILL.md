@@ -1,5 +1,5 @@
 ---
-name: parallel-subagent-workflow
+name: parallel-coding-workflow
 version: 1.0.0
 description: Execute complex multi-task workflows using parallel subagent coordination with automatic resource optimization
 author: Wayne Brantley
@@ -9,7 +9,7 @@ recommended_skills:
   - calculate-parallelism  # For automatic resource optimization
 ---
 
-# Parallel Subagent Workflow
+# Parallel Coding Workflow
 
 Execute complex tasks in parallel using multiple general-purpose subagents with intelligent resource-based coordination and iterative error resolution.
 
@@ -21,12 +21,12 @@ Execute complex tasks in parallel using multiple general-purpose subagents with 
 
 **Simple usage:**
 ```bash
-/parallel-subagent-workflow Implement user authentication across frontend and backend
+/parallel-coding-workflow Implement user authentication across frontend and backend
 ```
 
 **With custom parallelism:**
 ```bash
-/parallel-subagent-workflow --parallelism=6 Fix null reference errors across 12 files
+/parallel-coding-workflow --parallelism=6 Fix null reference errors across 12 files
 ```
 
 **That's it!** The skill handles:
@@ -40,7 +40,7 @@ Execute complex tasks in parallel using multiple general-purpose subagents with 
 
 ## When to Use This Skill
 
-Use `/parallel-subagent-workflow` when:
+Use `/parallel-coding-workflow` when:
 - ✅ Task requires multiple independent operations (3+ work items)
 - ✅ Work can be parallelized (e.g., multiple files, features, or components)
 - ✅ Complex refactoring across many files
@@ -101,19 +101,19 @@ Do NOT use when:
 
 ### Basic Usage
 ```bash
-/parallel-subagent-workflow <task description>
+/parallel-coding-workflow <task description>
 ```
 
 ### Advanced Options
 ```bash
 # Custom parallelism (2-6 recommended)
-/parallel-subagent-workflow --parallelism=6 <task>
+/parallel-coding-workflow --parallelism=6 <task>
 
 # Light workloads (more parallelism)
-/parallel-subagent-workflow --parallelism=6 --mem-per-agent=2 <task>
+/parallel-coding-workflow --parallelism=6 --mem-per-agent=2 <task>
 
 # Heavy workloads (less parallelism)
-/parallel-subagent-workflow --parallelism=3 --mem-per-agent=4 <task>
+/parallel-coding-workflow --parallelism=3 --mem-per-agent=4 <task>
 ```
 
 ### Defaults
@@ -128,21 +128,21 @@ Do NOT use when:
 
 ### Example 1: Multi-Component Feature
 ```bash
-/parallel-subagent-workflow Implement user authentication with login, logout, and session management across frontend and backend
+/parallel-coding-workflow Implement user authentication with login, logout, and session management across frontend and backend
 ```
 
 **Execution**: Decomposes into [Frontend login UI, Backend auth API, Session store, Logout handler, Auth middleware, Frontend state], spawns 6 parallel coding agents, tests all changes, iteratively fixes failures.
 
 ### Example 2: Multi-File Bug Fix
 ```bash
-/parallel-subagent-workflow Fix null reference errors in order processing workflow (affects 12 files)
+/parallel-coding-workflow Fix null reference errors in order processing workflow (affects 12 files)
 ```
 
 **Execution**: Batches 12 file fixes across 3 rounds of 4 parallel agents, tests all changes, fixes regressions iteratively.
 
 ### Example 3: Complex Refactoring
 ```bash
-/parallel-subagent-workflow Refactor legacy payment processing to use new payment gateway API
+/parallel-coding-workflow Refactor legacy payment processing to use new payment gateway API
 ```
 
 **Execution**: Decomposes into [Update models, Migrate client, Refactor checkout, Update admin UI, Migrations, Update tests], executes in parallel batches, tests thoroughly, fixes issues until complete.
