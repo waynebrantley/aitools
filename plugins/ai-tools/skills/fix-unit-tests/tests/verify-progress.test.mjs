@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { calculateProgress } from './verify-progress.mjs'
+import { calculateProgress } from '../scripts/verify-progress.mjs'
 
 test('calculateProgress - all files processed', () => {
   const initialFiles = ['file1.ts', 'file2.ts', 'file3.ts']

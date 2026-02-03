@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { createDetectionContext, ADAPTERS } from './detect-test-environment.mjs'
+import { createDetectionContext, ADAPTERS } from '../scripts/detect-test-environment.mjs'
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'url'

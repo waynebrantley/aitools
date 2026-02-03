@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { DotNetAdapter } from './dotnet.mjs'
+import { DotNetAdapter } from '../../scripts/adapters/dotnet.mjs'
 
 const adapter = new DotNetAdapter()
 

@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { parseValidation } from './verify-fix.mjs'
+import { parseValidation } from '../scripts/verify-fix.mjs'
 
 test('parseValidation - counts test failures', () => {
   const output = `

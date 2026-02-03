@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { TestFrameworkAdapter } from './base-adapter.mjs'
+import { TestFrameworkAdapter } from '../../scripts/adapters/base-adapter.mjs'
 
 const adapter = new TestFrameworkAdapter()
 

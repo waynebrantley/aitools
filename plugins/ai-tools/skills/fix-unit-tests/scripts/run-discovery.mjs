@@ -38,13 +38,22 @@ function runCommand(cmd, description, cwd) {
 
 // Detect test environment
 const startDir = process.argv[2] || process.cwd()
-const envResult = detectTestEnvironment(startDir)
+const envResults = detectTestEnvironment(startDir)
+
+// For now, use the first detected framework
+// TODO: Add CLI argument to select specific framework
+const envResult = envResults[0]
 
 // Get the adapter
 const adapter = ADAPTERS.find(a => a.name === envResult.framework)
 if (!adapter) {
   console.error(`❌ Unsupported framework: ${envResult.framework}`)
   process.exit(2)
+}
+
+if (envResults.length > 1) {
+  console.error(`⚠️  Multiple frameworks detected, using: ${envResult.displayName}`)
+  console.error('')
 }
 
 console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { parseOutput, sortByImpact } from './parse-validate-output.mjs'
+import { parseOutput, sortByImpact } from '../scripts/parse-validate-output.mjs'
 
 test('parseOutput - parses test failures', () => {
   const input = `

@@ -66,6 +66,25 @@ try {
 
 Always write tests for non-trivial scripts:
 - Use Node.js built-in test runner (node:test)
-- Create `*.test.mjs` files alongside scripts
+- Place all tests in a `tests/` directory (separate from `scripts/`)
+- Mirror the scripts structure: `scripts/adapters/foo.mjs` → `tests/adapters/foo.test.mjs`
 - Export functions from scripts for testing
 - Run tests with: `node script.test.mjs`
+
+**Pre-release testing:**
+- Run all skill tests before releasing: `node plugins/ai-tools/skills/run-all-tests.mjs`
+- All tests must pass before committing skill changes
+- This ensures cross-platform compatibility and prevents runtime errors
+
+**Directory structure:**
+```
+my-skill/
+  scripts/          # Production code only
+    foo.mjs
+    adapters/
+      bar.mjs
+  tests/            # All tests
+    foo.test.mjs
+    adapters/
+      bar.test.mjs
+```

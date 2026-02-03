@@ -11,12 +11,25 @@
  *   0 - Success (may have skipped tests or none)
  *   1 - Error occurred
  *   2 - No test environment detected
+ *
+ * Requirements:
+ *   Node.js >= 22.0.0 (uses native fs.globSync)
  */
+
+// Check Node.js version (requires v22+ for native globSync)
+const nodeVersion = process.versions.node.split('.').map(Number)
+if (nodeVersion[0] < 22) {
+  console.error(`❌ Error: This script requires Node.js >= 22.0.0 (current: ${process.version})`)
+  console.error(`   Reason: Uses native fs.globSync which was added in Node.js 22`)
+  console.error(`   Please upgrade Node.js: https://nodejs.org/`)
+  process.exit(1)
+}
 
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { globSync } from 'glob'
+
+const { globSync } = fs
 
 // Get current directory (ES modules equivalent of __dirname)
 const __filename = fileURLToPath(import.meta.url)
@@ -313,13 +326,22 @@ export function main() {
 
 	try {
 		// Detect test environment
-		const envResult = detectTestEnvironment(directory)
+		const envResults = detectTestEnvironment(directory)
+
+		// For now, use the first detected framework
+		// TODO: Add CLI argument to select specific framework or process all
+		const envResult = envResults[0]
 
 		// Get adapter
 		const adapter = ADAPTERS.find(a => a.name === envResult.framework)
 		if (!adapter) {
 			console.error(`${colors.red}❌ Unsupported framework: ${envResult.framework}${colors.reset}`)
 			process.exit(2)
+		}
+
+		if (envResults.length > 1) {
+			console.error(`${colors.yellow}⚠️  Multiple frameworks detected, analyzing: ${envResult.displayName}${colors.reset}`)
+			console.error('')
 		}
 
 		// Find all skipped tests

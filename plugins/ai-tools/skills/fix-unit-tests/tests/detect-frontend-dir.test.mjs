@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { detectTools } from './detect-frontend-dir.mjs'
+import { detectTools } from '../scripts/detect-frontend-dir.mjs'
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'url'

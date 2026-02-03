@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { categorizeReason, groupTests } from './find-skipped-tests.mjs'
+import { categorizeReason, groupTests } from '../scripts/find-skipped-tests.mjs'
 
 test('categorizeReason - categorizes E2E tests', () => {
   assert.strictEqual(categorizeReason('should be e2e test'), 'Should be E2E tests')

@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { VitestAdapter } from './vitest.mjs'
+import { VitestAdapter } from '../../scripts/adapters/vitest.mjs'
 
 const adapter = new VitestAdapter()
 

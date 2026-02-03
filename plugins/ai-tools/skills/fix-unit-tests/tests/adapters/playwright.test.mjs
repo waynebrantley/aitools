@@ -7,7 +7,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { PlaywrightAdapter } from './playwright.mjs'
+import { PlaywrightAdapter } from '../../scripts/adapters/playwright.mjs'
 
 const adapter = new PlaywrightAdapter()
 
