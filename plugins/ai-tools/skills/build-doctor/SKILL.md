@@ -57,6 +57,7 @@ To exclude additional warning codes, modify the `.NET adapter` configuration.
 
 Before starting, create a comprehensive todo list:
 
+**Single Framework:**
 ```
 TodoWrite:
 1. Detect build frameworks (pending)
@@ -66,6 +67,21 @@ TodoWrite:
 5. Fix files in parallel (pending)
 6. Verify all files processed (pending)
 7. Run final validation (pending)
+```
+
+**Multiple Frameworks** (use framework labels):
+```
+TodoWrite:
+1. Detect build frameworks (pending)
+2. Select framework(s) to fix (pending)
+3. Run build discovery - ALL frameworks (pending)
+4. Calculate parallelism (pending)
+5. [.NET] Fix files in parallel (pending)
+6. [TypeScript] Fix files in parallel (pending)
+7. [.NET] Verify all files processed (pending)
+8. [TypeScript] Verify all files processed (pending)
+9. [.NET] Run final validation (pending)
+10. [TypeScript] Run final validation (pending)
 ```
 
 Mark each todo as `in_progress` when starting, and `completed` when finished. Add file-specific todos during the fixing phase.
@@ -139,10 +155,31 @@ Which would you like the doctor to look at (or all)?
 
 **Store Selection**: Keep the **complete detection object(s)** for the selected framework(s). Each object must include: `framework`, `projectRoot`, `config`, `displayName`, and `buildType`.
 
-**Processing:**
-- **If "All" or all selected**: Process each framework sequentially (repeat steps 3-7 for each detection object)
-- **If multiple selected**: Process selected frameworks sequentially (one detection object at a time)
-- **If single selected**: Continue with that framework's detection object only
+**Processing Strategy:**
+
+- **Single framework**: Continue with that framework's detection object only
+- **Multiple frameworks**: Use parallel-framework optimization (see below)
+
+**Parallel-Framework Optimization** (multiple frameworks selected):
+
+1. Run discovery (step 3) on ALL frameworks first
+2. Check build status:
+   - **.NET builds successfully** (even with warnings) → Can proceed with fixing
+   - **TypeScript/JavaScript builds successfully** (even with warnings) → Can proceed with fixing
+   - **Framework fails to build** → Must fix critical errors first before warnings
+3. **Start fixing frameworks in parallel**:
+   - If .NET builds + TypeScript builds → Fix both simultaneously
+   - Create separate todo groups for each framework
+   - Spawn subagents for both frameworks (count toward total MAX_PARALLEL)
+4. Each framework follows its own fixing workflow:
+   - **.NET**: Fix all files → One final build
+   - **TypeScript**: Fix file → Verify → Next
+5. Final validation runs for ALL frameworks
+
+**Example**: 16GB RAM with MAX_PARALLEL=4, .NET + TypeScript both build successfully:
+- Spawn 2 .NET fix subagents (working on different files)
+- Spawn 2 TypeScript fix subagents (working on different files)
+- Total: 4 concurrent subagents across both frameworks
 
 ### 3. Run Build Discovery
 
@@ -374,7 +411,7 @@ node preview.mjs
 7. Run final validation (pending)
 ```
 
-**Phase 2 - During Parallel Fixing:**
+**Phase 2a - During Parallel Fixing (Single Framework):**
 ```
 1. Detect build frameworks (completed)
 2. Select framework(s) to fix (completed)
@@ -386,6 +423,21 @@ node preview.mjs
 8. Fix src/hooks/useAuth.ts (3 errors) (pending)
 9. Verify all files processed (pending)
 10. Run final validation (pending)
+```
+
+**Phase 2b - During Parallel Fixing (Multiple Frameworks, MAX_PARALLEL=4):**
+```
+1. Detect build frameworks (completed)
+2. Select framework(s) to fix (completed)
+3. Run build discovery - ALL frameworks (completed)
+4. Calculate parallelism (completed)
+5. [.NET] Fix Services/AuthService.cs (8 warnings) (in_progress)
+6. [.NET] Fix Controllers/UserController.cs (5 warnings) (in_progress)
+7. [TypeScript] Fix src/utils/helper.ts (12 errors) (in_progress)
+8. [TypeScript] Fix src/components/Button.tsx (8 errors) (in_progress)
+9. [.NET] Fix Models/User.cs (3 warnings) (pending)
+10. [TypeScript] Fix src/services/api.ts (5 errors) (pending)
+... (frameworks interleaved, 4 total subagents running)
 ```
 
 **Phase 3 - Near Completion:**
@@ -463,7 +515,8 @@ Each fix subagent MUST:
 - ✅ **Process ALL files** in error list (not just first!)
 - ✅ Fix files in priority order (most issues first)
 - ✅ Spawn subagents in parallel (up to MAX_PARALLEL)
-- ✅ Verify each file individually
+- ✅ **Parallelize across frameworks** if multiple frameworks build successfully
+- ✅ Verify each file individually (TypeScript only)
 - ✅ Run full validation at end
 
 ### DON'T
