@@ -58,12 +58,33 @@ Do NOT use when:
 
 ### Workflow Phases
 
+**IMPORTANT**: Use the **TodoWrite** tool throughout this workflow to track progress and ensure ALL work items are completed.
+
 1. **Calculate Resources**: Determine optimal parallelism (auto-detected or user-specified)
 2. **Decompose Tasks**: Break down work into independent, parallelizable items
-3. **Phase 1 - Parallel Coding**: Launch up to MAX_PARALLEL subagents for implementation
-4. **Phase 2 - Testing**: Single test agent validates all changes
-5. **Phase 3 - Fix Iteration**: If tests fail, spawn fix agents (respecting parallelism)
-6. **Repeat**: Continue fix-test cycles until zero errors remain
+3. **Create Todo List**: Add all work items to TodoWrite for tracking
+4. **Phase 1 - Parallel Coding**: Launch up to MAX_PARALLEL subagents for implementation
+5. **Phase 2 - Testing**: Single test agent validates all changes
+6. **Phase 3 - Fix Iteration**: If tests fail, spawn fix agents (respecting parallelism)
+7. **Repeat**: Continue fix-test cycles until zero errors remain
+
+### Initial Task Planning
+
+Before starting parallel execution, create a comprehensive todo list:
+
+```
+TodoWrite:
+1. Calculate optimal parallelism (pending)
+2. Decompose task into work items (pending)
+3. Implement work item: [Feature A] (pending)
+4. Implement work item: [Feature B] (pending)
+5. Implement work item: [Feature C] (pending)
+... (one todo per work item)
+N. Run consolidated testing (pending)
+N+1. Fix any test failures (pending)
+```
+
+Mark each todo as `in_progress` when spawning its subagent, and `completed` when the subagent finishes successfully.
 
 ### Resource Management
 
@@ -151,10 +172,55 @@ Do NOT use when:
 
 ## Tool Coordination
 
+- **TodoWrite**: Track workflow progress and work item status (REQUIRED - use throughout)
 - **Bash**: Run calculate-parallelism (if installed) to determine MAX_PARALLEL
 - **Task**: Spawn general-purpose subagents with `subagent_type="general-purpose"`
-- **TodoWrite**: Track workflow progress (optional)
 - **Read/Grep/Glob**: Gather context before decomposition
+
+### TodoWrite Examples
+
+**Phase 1 - Initial Planning:**
+```
+1. Calculate optimal parallelism (in_progress)
+2. Decompose task into work items (pending)
+3. Implement frontend login UI (pending)
+4. Implement backend auth API (pending)
+5. Implement session storage (pending)
+6. Implement auth middleware (pending)
+7. Run consolidated testing (pending)
+```
+
+**Phase 2 - Parallel Coding (MAX_PARALLEL=4):**
+```
+1. Calculate optimal parallelism (completed)
+2. Decompose task into work items (completed)
+3. Implement frontend login UI (in_progress)
+4. Implement backend auth API (in_progress)
+5. Implement session storage (in_progress)
+6. Implement auth middleware (in_progress)
+7. Run consolidated testing (pending)
+```
+
+**Phase 3 - Testing:**
+```
+1-6. [All coding tasks] (completed)
+7. Run consolidated testing (in_progress)
+```
+
+**Phase 4 - Fix Iteration (if needed):**
+```
+1-6. [All coding tasks] (completed)
+7. Run consolidated testing (completed)
+8. Fix auth API test failures (in_progress)
+9. Fix session storage race condition (in_progress)
+10. Re-run testing (pending)
+```
+
+**Phase 5 - Complete:**
+```
+1-9. [All tasks] (completed)
+10. Re-run testing (completed)
+```
 
 ---
 

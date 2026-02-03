@@ -34,6 +34,26 @@ Systematically fix test failures using parallel subagents with intelligent coord
 
 ## Core Workflow
 
+**IMPORTANT**: Use the **TodoWrite** tool throughout this workflow to track progress and ensure ALL steps are completed. Create todos at the start and update them as you progress through each phase.
+
+### Initial Task Planning
+
+Before starting, create a comprehensive todo list:
+
+```
+TodoWrite:
+1. Detect test frameworks (pending)
+2. Select framework(s) to fix (pending)
+3. Run test discovery (pending)
+4. Calculate parallelism (pending)
+5. Fix files in parallel (pending)
+6. Verify all files processed (pending)
+7. Run final validation (pending)
+8. Check for skipped tests (pending)
+```
+
+Mark each todo as `in_progress` when starting, and `completed` when finished. Add file-specific todos during the fixing phase.
+
 ### 1. Discovery & Analysis
 
 Auto-detect test framework and run discovery:
@@ -122,6 +142,18 @@ Uses **calculate-parallelism** skill for resource-aware execution (2-6 parallel 
 ### 5. Parallel File Fixing
 
 **CRITICAL**: Process ALL files with errors, not just the first one!
+
+**TodoWrite Integration**: When you receive the file list, create a todo for each file:
+
+```
+TodoWrite (add to existing list):
+- Fix tests/unit/auth.test.ts (5 failures) (pending)
+- Fix tests/integration/api.spec.ts (3 failures) (pending)
+- Fix tests/e2e/checkout.spec.ts (2 failures) (pending)
+... (one todo per file)
+```
+
+As you spawn subagents, mark files as `in_progress`. When verified, mark as `completed`.
 
 For each file in error list:
 
@@ -253,6 +285,52 @@ node preview.mjs
 - Understanding what the skill will do before running it
 - Checking if your project is supported
 - Seeing which files have the most issues
+
+---
+
+## Tool Coordination
+
+- **TodoWrite**: Track workflow progress and file-level fixes (REQUIRED - use throughout)
+- **Task**: Spawn parallel fix subagents with `subagent_type="general-purpose"`
+- **Bash**: Run detection, test, verification scripts
+- **Read/Grep/Glob**: Gather context before fixing
+
+### TodoWrite Examples
+
+**Phase 1 - Initial Planning:**
+```
+1. Detect test frameworks (in_progress)
+2. Select framework(s) to fix (pending)
+3. Run test discovery (pending)
+4. Calculate parallelism (pending)
+5. Fix files in parallel (pending)
+6. Verify all files processed (pending)
+7. Run final validation (pending)
+8. Check for skipped tests (pending)
+```
+
+**Phase 2 - During Parallel Fixing:**
+```
+1. Detect test frameworks (completed)
+2. Select framework(s) to fix (completed)
+3. Run test discovery (completed)
+4. Calculate parallelism (completed)
+5. Fix tests/unit/auth.test.ts (5 failures) (in_progress)
+6. Fix tests/integration/api.spec.ts (3 failures) (in_progress)
+7. Fix tests/e2e/checkout.spec.ts (2 failures) (pending)
+8. Fix tests/unit/validation.test.ts (1 failure) (pending)
+9. Verify all files processed (pending)
+10. Run final validation (pending)
+11. Check for skipped tests (pending)
+```
+
+**Phase 3 - Near Completion:**
+```
+1-8. [All file fixes] (completed)
+9. Verify all files processed (completed)
+10. Run final validation (in_progress)
+11. Check for skipped tests (pending)
+```
 
 ---
 
