@@ -7,7 +7,6 @@
 Thumbs.db
 
 # IDE
-.vscode/
 .idea/
 
 # Node modules (if using MCP servers)

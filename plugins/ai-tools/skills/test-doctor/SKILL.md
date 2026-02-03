@@ -1,5 +1,4 @@
 ---
-name: test-doctor
 version: 1.0.0
 description: Diagnose and fix test failures using resource-aware parallel subagents with automatic test framework detection
 author: Wayne Brantley

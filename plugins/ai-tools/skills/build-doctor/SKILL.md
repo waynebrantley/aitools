@@ -1,5 +1,4 @@
 ---
-name: build-doctor
 version: 1.0.0
 description: Diagnose and fix build errors using resource-aware parallel subagents with automatic framework detection
 author: Wayne Brantley

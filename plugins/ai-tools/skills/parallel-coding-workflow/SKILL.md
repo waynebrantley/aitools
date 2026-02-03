@@ -1,5 +1,4 @@
 ---
-name: parallel-coding-workflow
 version: 1.0.0
 description: Execute complex multi-task workflows using parallel subagent coordination with automatic resource optimization
 author: Wayne Brantley

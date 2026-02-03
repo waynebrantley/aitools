@@ -1,5 +1,4 @@
 ---
-name: github-workflow-doctor
 description: Track GitHub workflows, analyze failures, and automatically fix issues
 args:
   - name: run_id

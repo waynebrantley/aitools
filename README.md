@@ -29,17 +29,35 @@ Once installed, the plugin's skills will be available in Claude Code. Skills are
 
 ## Skills
 
-### wb:calculate-parallelism
+### ai-tools:calculate-parallelism
 
 Calculates optimal parallelism for spawning subagents based on available system resources (memory, CPU, load). Prevents resource exhaustion by adapting to system capabilities.
 
-**Usage**: Automatically invoked when skills need to determine safe parallel execution limits.
+**Usage**: Automatically invoked when other skills need to determine safe parallel execution limits.
 
-### wb:fix-unit-tests
+### ai-tools:test-doctor
 
-Systematically fixes frontend unit test failures using resource-aware parallel subagents with file-level isolation and iterative verification. Designed for JavaScript/TypeScript frontend tests (Vitest, Jest, etc.).
+Systematically fixes test failures (unit, E2E, server-side) using resource-aware parallel subagents with file-level isolation and iterative verification.
 
-**Usage**: Invoke with `/wb:fix-unit-tests` or ask "fix my unit tests"
+**Usage**: Invoke with `/ai-tools:test-doctor` or ask "fix my tests"
+
+### ai-tools:build-doctor
+
+Fixes build errors and warnings across TypeScript and .NET projects. Runs builds, parses errors, and systematically fixes issues.
+
+**Usage**: Invoke with `/ai-tools:build-doctor` or ask "fix my build"
+
+### ai-tools:github-workflow-doctor
+
+Fixes failing GitHub Actions workflows by analyzing logs and fixing issues.
+
+**Usage**: Invoke with `/ai-tools:github-workflow-doctor` or ask "fix my GitHub workflow"
+
+### ai-tools:parallel-coding-workflow
+
+Orchestrates parallel development workflows using multiple subagents for large tasks.
+
+**Usage**: Automatically invoked for complex multi-file tasks
 
 ## Development
 
@@ -49,10 +67,11 @@ Systematically fixes frontend unit test failures using resource-aware parallel s
 2. Add a `SKILL.md` file with YAML frontmatter:
    ```yaml
    ---
-   name: wb:my-skill
+   name: my-skill
    description: Use this skill when...
    ---
    ```
+   (The skill will be invoked as `/ai-tools:my-skill`)
 3. Include supporting resources as needed (references/, examples/, scripts/)
 
 ### Testing

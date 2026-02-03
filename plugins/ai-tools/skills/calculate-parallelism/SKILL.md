@@ -1,5 +1,4 @@
 ---
-name: calculate-parallelism
 version: 1.0.0
 description: Calculate optimal parallelism for parallel subagent execution based on system resources
 author: Wayne Brantley
