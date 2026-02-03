@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Preview what fix-unit-tests would do on a target project
+ * Preview what test-doctor would do on a target project
  * Usage: node preview-fix.mjs /path/to/target/project
  */
 
@@ -10,13 +10,13 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const SCRIPTS_DIR = __dirname
+const SCRIPTS_DIR = join(__dirname, 'scripts')
 
 // Get target project from command line
 const targetProject = process.argv[2] || process.cwd()
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-console.log('🔍 Fix Unit Tests - Preview Mode')
+console.log('🩺 Test Doctor - Preview Mode')
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 console.log(`Target: ${targetProject}`)
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

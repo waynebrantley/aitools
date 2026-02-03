@@ -1,15 +1,15 @@
 ---
-name: fix-unit-tests
+name: test-doctor
 version: 1.0.0
-description: Systematically fix test failures using resource-aware parallel subagents with automatic test framework detection
+description: Diagnose and fix test failures using resource-aware parallel subagents with automatic test framework detection
 author: Wayne Brantley
 category: Testing
-tags: [testing, parallel, automation, quality, debugging]
+tags: [testing, parallel, automation, quality, debugging, diagnosis]
 recommended_skills:
   - calculate-parallelism  # For automatic resource optimization
 ---
 
-# Fix Unit Tests
+# Test Doctor
 
 Systematically fix test failures using parallel subagents with intelligent coordination, resource-aware execution, and iterative verification.
 
@@ -228,6 +228,31 @@ Auto-detection via `detect-test-environment.mjs`:
 - Test Command: `dotnet test <project>.csproj`
 - Validation: `dotnet format`, `dotnet build`
 - Patterns: `**/*Test.cs`, `**/*Tests.cs`
+
+---
+
+## Preview Mode
+
+Before running the full skill, preview what would be detected and fixed:
+
+```bash
+# From skill directory
+node preview.mjs [target-directory]
+
+# Uses Git repository root if no directory specified
+node preview.mjs
+```
+
+**What it does:**
+1. Detects all test frameworks in the target directory
+2. Runs discovery (tests + validation) - **read-only analysis**
+3. Shows files that would be fixed (sorted by error count)
+4. Finds skipped tests that could be re-enabled
+
+**Perfect for:**
+- Understanding what the skill will do before running it
+- Checking if your project is supported
+- Seeing which files have the most issues
 
 ---
 
