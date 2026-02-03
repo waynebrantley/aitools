@@ -1,44 +1,62 @@
 ---
-name: wb:calculate-parallelism
-description: Calculate optimal parallelism for spawning subagents based on available system resources
+name: calculate-parallelism
+version: 1.0.0
+description: Calculate optimal parallelism for parallel subagent execution based on system resources
+author: Wayne Brantley
+category: Utility
+tags: [parallelism, resources, optimization, performance]
 ---
 
 # Calculate Parallelism
 
-Analyzes available system resources (memory, CPU, load) and calculates the optimal number of parallel subagents to spawn without overwhelming the system.
+Analyzes system resources (memory, CPU, load) and calculates the optimal number of parallel subagents to spawn without overwhelming the system.
 
-**Scope**: Generic utility skill for any workflow requiring parallel task execution.
+**Scope**: Generic utility for any workflow requiring parallel task execution.
+
+---
 
 ## Purpose
 
-Prevents resource exhaustion when spawning multiple parallel subagents by:
+Prevents resource exhaustion by:
 - Detecting available memory and CPU cores
 - Checking system load
 - Calculating safe parallelism limits
-- Applying hard caps to prevent coordination overhead
+- Applying coordination caps
+
+---
 
 ## Usage
 
 ### Basic Usage
 
 ```bash
-# Get optimal parallelism value (single number output)
-MAX_PARALLEL=$(node .claude/skills/calculate-parallelism/calculate-parallelism.mjs)
-echo "Will run $MAX_PARALLEL parallel tasks"
+# Default: uses 3GB per subagent
+node calculate-parallelism.mjs
 
-# Specify custom memory per subagent (default: 3GB)
-MAX_PARALLEL=$(node .claude/skills/calculate-parallelism/calculate-parallelism.mjs --mem-per-agent=2)
-echo "Will run $MAX_PARALLEL parallel tasks (using 2GB per agent)"
+# Custom memory per subagent
+node calculate-parallelism.mjs --mem-per-agent=2
+
+# JSON output for programmatic use
+node calculate-parallelism.mjs --json
 ```
 
-### JSON Output
+### Output Formats
 
-```bash
-# Get detailed resource analysis
-node .claude/skills/calculate-parallelism/calculate-parallelism.mjs --json
+**Default (Human-readable):**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Resource Analysis
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Memory:  24GB available / 32GB total
+CPU:     8 cores, load average: 2 (normal)
+Limit:   coordination overhead (capped at 6)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Running up to 6 parallel subagents
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6
 ```
 
-**JSON output format:**
+**JSON:**
 ```json
 {
   "max_parallel": 6,
@@ -50,102 +68,33 @@ node .claude/skills/calculate-parallelism/calculate-parallelism.mjs --json
 }
 ```
 
-### Human-Readable Report
+---
 
-```bash
-# Get formatted report (default when no --json flag)
-node .claude/skills/calculate-parallelism/calculate-parallelism.mjs
-```
+## How It Works
 
-**Report output:**
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 Resource Analysis
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Memory:  24GB available / 32GB total
-CPU:     8 cores, load average: 2 (normal)
-Limit:   coordination overhead (capped at 6)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Running up to 6 parallel fix subagents
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-6
-```
+### Calculation Algorithm
 
-## Calculation Algorithm
+1. **Memory Constraint**: `available_memory_gb / mem_per_agent` (default: 3GB/agent)
+2. **CPU Constraint**: `physical_cpu_cores`
+3. **Load Adjustment**: Reduce by 50% if `load_average >= cpu_cores`
+4. **Apply Limits**: `clamp(min(memory, cpu) × load_factor, MIN=2, MAX=6)`
 
-### 1. Memory Constraint
-
-```
-memory_limit = available_memory_gb / 3
-```
-
-- Assumes **3GB per subagent** (source files + test files + type-checking + validation)
-- Uses **available** memory (not total)
-- Conservative to prevent OOM
-
-### 2. CPU Constraint
-
-```
-cpu_limit = physical_cpu_cores
-```
-
-- Test fixing is CPU-intensive (type-checking, test execution, linting)
-- No benefit spawning more subagents than cores
-- Prevents CPU thrashing
-
-### 3. Load Constraint
-
-```
-if load_average >= cpu_cores:
-  load_factor = 50%  # Reduce by half
-else:
-  load_factor = 100%
-```
-
-- Reduces parallelism if system is saturated
-- Prevents adding load to already busy system
-
-### 4. Final Calculation
-
-```
-max_parallel = min(memory_limit, cpu_limit) × load_factor
-max_parallel = clamp(max_parallel, MIN=2, MAX=6)
-```
-
-- Takes whichever resource is more constrained
-- Applies load reduction if needed
-- Enforces hard limits:
-  - **Minimum: 2** - Always use some parallelism
-  - **Maximum: 6** - Coordination overhead diminishes returns
-
-### 5. Limiting Factor
-
-Reports which constraint determined the final value:
-- `"memory"` - Available memory is the bottleneck
-- `"CPU"` - CPU cores are the bottleneck
+**Limiting Factors:**
+- `"memory"` - Available memory is bottleneck
+- `"CPU"` - CPU cores are bottleneck
 - `"coordination overhead (capped at 6)"` - Hit maximum cap
-- `"minimum enforced"` - System too constrained, using minimum
+- `"minimum enforced"` - System constrained, using minimum
 
-## Example Calculations
+### Example Calculations
 
-| System | Memory (Avail/Total) | CPU | Load | Calculation | Result | Limiting Factor |
-|--------|---------------------|-----|------|-------------|--------|-----------------|
-| High-end dev | 24GB / 32GB | 8 cores | 2 | min(8, 8) × 100% → cap | **6** | Coordination cap |
-| Mid-range | 12GB / 16GB | 4 cores | 1 | min(4, 4) × 100% | **4** | CPU & Memory |
-| Busy system | 20GB / 32GB | 8 cores | 10 | min(6, 8) × 50% | **3** | High load |
-| Low-memory | 6GB / 8GB | 4 cores | 1 | min(2, 4) × 100% | **2** | Memory |
+| System | Memory | CPU | Load | Result | Limiting Factor |
+|--------|--------|-----|------|--------|-----------------|
+| High-end | 24/32GB | 8 cores | 2 | **6** | Coordination cap |
+| Mid-range | 12/16GB | 4 cores | 1 | **4** | CPU & Memory |
+| Busy | 20/32GB | 8 cores | 10 | **3** | High load (50% reduction) |
+| Low-memory | 6/8GB | 4 cores | 1 | **2** | Memory |
 
-## Platform Support
-
-**Cross-platform**: Works on macOS, Linux, and Windows
-- Uses Node.js `os` module for resource detection
-- Falls back to conservative defaults if detection fails
-
-## Skills That Use This
-
-- **fix-unit-tests** - Parallel test file fixing
-- **parallel-subagent-workflow** - Generic parallel task execution
-- Any skill spawning multiple subagents concurrently
+---
 
 ## Configuration
 
@@ -153,76 +102,51 @@ Reports which constraint determined the final value:
 
 ```bash
 # Override memory per subagent (default: 3GB)
-node calculate-parallelism.mjs --mem-per-agent=2
+--mem-per-agent=<number>
 
-# Can also use space separator
-node calculate-parallelism.mjs --mem-per-agent 2.5
-
-# Combine with JSON output
-node calculate-parallelism.mjs --mem-per-agent=4 --json
+# JSON output
+--json
 ```
 
-### Default Constants
-
-Constants in `calculate-parallelism.mjs`:
+### Constants
 
 ```javascript
-const DEFAULT_MEM_PER_SUBAGENT_GB = 3  // Default memory per subagent (overridable via CLI)
-const MIN_PARALLEL = 2                 // Minimum parallelism
-const MAX_PARALLEL_CAP = 6             // Maximum parallelism
-const LOAD_REDUCTION_FACTOR = 50       // Load reduction %
+DEFAULT_MEM_PER_SUBAGENT_GB = 3  // Memory per subagent
+MIN_PARALLEL = 2                 // Minimum parallelism
+MAX_PARALLEL_CAP = 6             // Maximum parallelism
+LOAD_REDUCTION_FACTOR = 50       // Reduction % when saturated
 ```
 
-## Exit Codes
+---
 
-- `0` - Success (always)
-- Script never fails - returns conservative values if errors occur
+## Used By
 
-## Output Modes
+- **fix-unit-tests** - Parallel test file fixing
+- **parallel-subagent-workflow** - Generic parallel execution
+- Any skill spawning multiple concurrent subagents
 
-1. **Default** - Human-readable report + final value
-   - Best for interactive use
-   - Shows detailed resource analysis
-   - Last line is the MAX_PARALLEL value (for shell capture)
+---
 
-2. **JSON** (`--json`) - Machine-readable format
-   - Best for programmatic use
-   - Structured data for parsing
-   - Includes all resource metrics
+## Platform Support
 
-## Integration Pattern
+**Cross-platform**: Works on macOS, Linux, and Windows
+- Uses Node.js `os` module for resource detection
+- Falls back to conservative defaults if detection fails
 
-```bash
-#!/bin/bash
-
-# Calculate optimal parallelism
-MAX_PARALLEL=$(node .claude/skills/calculate-parallelism/calculate-parallelism.mjs)
-
-# Use in parallel task spawning
-for ((i=0; i<$MAX_PARALLEL; i++)); do
-  spawn_subagent "${files[$i]}" &
-done
-
-# Wait for batch to complete before spawning more
-wait
-```
+---
 
 ## When to Use
 
-Use this skill whenever you need to:
+Use when you need to:
 - ✅ Spawn multiple parallel subagents
 - ✅ Process files/tasks in parallel
-- ✅ Avoid overwhelming system resources
+- ✅ Avoid system resource exhaustion
 - ✅ Adapt to different system capabilities
-- ✅ Prevent memory exhaustion or CPU thrashing
-
-## Performance Benefits
-
-- **Adaptive**: Automatically scales to system capabilities
-- **Safe**: Prevents resource exhaustion
-- **Efficient**: Maximizes parallelism without waste
-- **Portable**: Works across different machines and environments
 
 ---
 
 **Remember**: Resource-aware execution ensures optimal performance without overwhelming the system, whether running on a high-end workstation or a resource-constrained laptop.
+
+**Version**: 1.0.0
+**License**: MIT
+**Author**: Wayne Brantley
