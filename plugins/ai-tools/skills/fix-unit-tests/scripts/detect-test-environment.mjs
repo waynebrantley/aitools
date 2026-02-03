@@ -132,10 +132,26 @@ function findProjectRoot(startDir, walkUp = false) {
     // Also check subdirectories (max depth 2)
     const searchDirs = []
     if (existsSync(resolvedStartDir)) {
+      // Depth 1: immediate subdirectories
       const entries = readdirSync(resolvedStartDir, { withFileTypes: true })
       for (const entry of entries) {
         if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
           searchDirs.push(join(resolvedStartDir, entry.name))
+        }
+      }
+
+      // Depth 2: subdirectories of subdirectories
+      for (const subDir of [...searchDirs]) {
+        if (!existsSync(subDir)) continue
+        try {
+          const subEntries = readdirSync(subDir, { withFileTypes: true })
+          for (const entry of subEntries) {
+            if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+              searchDirs.push(join(subDir, entry.name))
+            }
+          }
+        } catch (error) {
+          // Skip directories we can't read
         }
       }
     }

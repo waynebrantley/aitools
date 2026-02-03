@@ -27,6 +27,8 @@ Systematically fix test failures using parallel subagents with intelligent coord
 - ✅ Lint/format errors causing failures
 - ✅ After major refactoring or dependency updates
 - ✅ Pre-commit cleanup needed
+- ✅ Monorepos with multiple test projects
+- ✅ Projects with multiple test frameworks
 
 ---
 
@@ -38,6 +40,60 @@ Auto-detect test framework and run discovery:
 
 ```bash
 node scripts/detect-test-environment.mjs  # Detect framework
+```
+
+**Output**: JSON array of detected frameworks (may contain multiple entries)
+
+### 2. Framework Selection (if multiple detected)
+
+If multiple test frameworks are detected, prompt the user to select which to fix.
+
+**Selection Strategy:**
+
+**A. If 2-4 frameworks detected** - Use `AskUserQuestion` with `multiSelect: true`:
+
+```
+Which test framework(s) would you like to fix?
+```
+
+**Options:**
+1. **All frameworks (Recommended)** - Fix all test projects sequentially
+2. Individual framework entries with details (up to 3):
+   - Display name and test type (e.g., ".NET Test (unit)")
+   - Project root path
+   - Framework variant (e.g., "xunit", "nunit")
+   - Project file (if applicable)
+
+**B. If >4 frameworks detected** - Show grouped, numbered list and ask for text response:
+
+Display frameworks grouped by type:
+
+Detected 6 test frameworks:
+
+**.NET Test (4 projects):**
+1. WebSite.Tests.E2E (xunit)
+2. NTC.Data.EFCore.Tests (nunit)
+3. WebSite.Tests (xunit)
+4. WebSite.Tests.E2E (xunit)
+
+**JavaScript (2 projects):**
+5. Vitest (unit tests)
+6. Playwright (e2e tests)
+
+Which would you like to fix (or all)?
+
+**Store Selection**: Keep the selected framework config(s) for the workflow.
+
+**Processing:**
+- **If "All" or all selected**: Process each framework sequentially (repeat steps 3-8 for each)
+- **If multiple selected**: Process selected frameworks sequentially
+- **If single selected**: Continue with that framework only
+
+### 3. Run Discovery
+
+Run tests and validation for the selected framework(s):
+
+```bash
 node scripts/run-discovery.mjs            # Run tests + validation
 ```
 
@@ -49,7 +105,7 @@ node scripts/parse-validate-output.mjs table
 
 **Output**: List of files sorted by error count (fix high-impact files first)
 
-### 2. Calculate Parallelism
+### 4. Calculate Parallelism
 
 Determine optimal parallelism based on system resources and test framework:
 
@@ -63,7 +119,7 @@ node calculate-parallelism.mjs --mem-per-agent=<framework_value>
 
 Uses **calculate-parallelism** skill for resource-aware execution (2-6 parallel agents).
 
-### 3. Parallel File Fixing
+### 5. Parallel File Fixing
 
 **CRITICAL**: Process ALL files with errors, not just the first one!
 
@@ -97,7 +153,7 @@ For each file in error list:
    - ⚠️ **Partial** (fewer errors): Retry with remaining issues (max 3 attempts)
    - ❌ **Failed**: Escalate to user
 
-### 4. Progress Verification
+### 6. Progress Verification
 
 Verify ALL files were processed:
 
@@ -107,7 +163,7 @@ node scripts/verify-progress.mjs initial-files.txt fixed-files.txt
 
 If files remain, spawn subagents for remaining files.
 
-### 5. Final Validation
+### 7. Final Validation
 
 Run complete validation after ALL files processed:
 
@@ -119,7 +175,7 @@ node scripts/run-final-validation.mjs
 
 If issues remain: Identify regressions, spawn fix subagents, repeat (max 2 cycles).
 
-### 6. Skipped Tests Check
+### 8. Skipped Tests Check
 
 After all errors fixed, check for skipped tests:
 
