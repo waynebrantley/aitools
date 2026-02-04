@@ -25,21 +25,27 @@ If a `run_id` argument was provided, use it and proceed to Step 2.
 Otherwise, query the repository for running workflows:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/list-running-workflows.mjs
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/list-running-workflows.mjs
 ```
 
 This returns a JSON array of running/queued workflows with details like:
-- Workflow run ID
-- Workflow name
-- Branch
+- Workflow name and run number
+- Display title (commit message or PR title)
+- Event type (push, pull_request, etc.) and who triggered it
 - Status (in_progress or queued)
 - How long it's been running
 
 **If running workflows are found:**
 
-Present the list to the user and ask them to choose:
-- Format each workflow as: `[ID] Workflow Name (branch) - elapsed time`
-- Example: `⏳ [12345678] CI Tests (main) - 2m 30s`
+Present the list to the user and ask them to choose. Format each workflow in a two-line format:
+```
+⏳ Update UI; Move scripts to miniter-utility
+   container build #5475: Pull request by waynebrantley at 2:34 PM (2m 30s)
+```
+
+The format is:
+- Line 1: Status icon + display title
+- Line 2: workflow name #runNumber: event type by actor at trigger time (elapsed time)
 
 <ask-user-question>
 Ask the user: "Which workflow would you like to track?"
@@ -51,7 +57,7 @@ Plus these additional options:
 
 If the user selects "Show all recent workflows", run:
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/list-running-workflows.mjs --all
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/list-running-workflows.mjs --all
 ```
 
 Then present the expanded list and ask them to choose again.
@@ -63,7 +69,7 @@ If the user selects "Enter a specific run ID", ask them to provide the run ID.
 Query for recent workflows including failed ones:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/list-running-workflows.mjs --include-failed
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/list-running-workflows.mjs --include-failed
 ```
 
 If failed workflows are found, inform the user: "No running workflows, but found failed workflows you can fix."
@@ -86,7 +92,7 @@ Store the selected workflow run ID for use throughout the skill.
 Before tracking, check if the selected workflow is already completed:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/get-workflow-info.mjs <run-id>
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/get-workflow-info.mjs <run-id>
 ```
 
 Check the `status` field in the JSON output:
@@ -114,7 +120,7 @@ Check the `status` field in the JSON output:
 Run the wait-for-workflow script to poll the workflow status:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/wait-for-workflow.mjs <run-id>
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/wait-for-workflow.mjs <run-id>
 ```
 
 This will output progress updates to stderr and final status as JSON to stdout.
@@ -148,7 +154,7 @@ Proceed to Step 4 for failure analysis and fixing.
 Run the get-workflow-logs script to fetch failure details:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/get-workflow-logs.mjs <run-id>
+node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/get-workflow-logs.mjs <run-id>
 ```
 
 This returns:
@@ -192,7 +198,7 @@ For each attempt (while `attempt_count <= max_attempts`):
    ```
 
 6. **Check workflow trigger type**:
-   - Run `node ${CLAUDE_PLUGIN_ROOT}/scripts/get-workflow-info.mjs <original-run-id>`
+   - Run `node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/get-workflow-info.mjs <original-run-id>`
    - Check the `event` field in the JSON output
 
 7. **Handle based on trigger type**:
@@ -205,7 +211,7 @@ For each attempt (while `attempt_count <= max_attempts`):
    - Wait a few seconds for GitHub to register the push
    - Get the new workflow run ID:
      ```bash
-     node ${CLAUDE_PLUGIN_ROOT}/scripts/get-workflow-info.mjs --latest "<workflow-name>"
+     node ${CLAUDE_PLUGIN_ROOT}/skills/github-workflow-doctor/scripts/get-workflow-info.mjs --latest "<workflow-name>"
      ```
    - **Go back to Step 2** with the new run ID
    - Increment `attempt_count`

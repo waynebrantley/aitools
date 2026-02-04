@@ -1,6 +1,6 @@
 {
   "name": "ai-tools",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Productivity skills and utilities for enhanced Claude Code workflows",
   "author": {
     "name": "Wayne Brantley"
@@ -8,5 +8,11 @@
   "license": "MIT",
   "homepage": "https://github.com/waynebrantley/aitools#readme",
   "repository": "https://github.com/waynebrantley/aitools",
-  "keywords": ["skills", "productivity", "utilities", "test-fixing", "parallelism"]
+  "keywords": [
+    "skills",
+    "productivity",
+    "utilities",
+    "test-fixing",
+    "parallelism"
+  ]
 }

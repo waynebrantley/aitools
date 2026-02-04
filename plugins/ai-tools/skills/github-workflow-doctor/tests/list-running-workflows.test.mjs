@@ -5,7 +5,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { listRunningWorkflows, formatWorkflowList } from '../scripts/list-running-workflows.mjs';
+import { listRunningWorkflows, formatWorkflowList, formatWorkflowDisplay } from '../scripts/list-running-workflows.mjs';
 
 test('listRunningWorkflows exports a function', () => {
   assert.strictEqual(typeof listRunningWorkflows, 'function');
@@ -20,21 +20,36 @@ test('formatWorkflowList handles empty array', () => {
   assert.strictEqual(result, 'No workflows found.');
 });
 
+test('formatWorkflowDisplay exports a function', () => {
+  assert.strictEqual(typeof formatWorkflowDisplay, 'function');
+});
+
 test('formatWorkflowList formats workflows correctly', () => {
   const workflows = [
     {
       id: 12345,
+      runNumber: 5475,
       workflow: 'CI Tests',
       status: 'in_progress',
       branch: 'main',
+      title: 'Update UI; Move scripts to miniter-utility',
+      event: 'pull_request',
+      actor: 'waynebrantley',
       started: new Date(Date.now() - 150000).toISOString() // 2.5 minutes ago
     }
   ];
 
   const result = formatWorkflowList(workflows);
-  assert.ok(result.includes('12345'));
+  // Should NOT include the database ID
+  assert.ok(!result.includes('12345'));
+  // Should include display title
+  assert.ok(result.includes('Update UI; Move scripts to miniter-utility'));
+  // Should include workflow name and run number
   assert.ok(result.includes('CI Tests'));
-  assert.ok(result.includes('main'));
+  assert.ok(result.includes('#5475'));
+  // Should include event type and actor
+  assert.ok(result.includes('Pull request'));
+  assert.ok(result.includes('waynebrantley'));
   assert.ok(result.includes('⏳')); // in_progress icon
 });
 
@@ -42,20 +57,56 @@ test('formatWorkflowList formats failed workflows correctly', () => {
   const workflows = [
     {
       id: 12346,
+      runNumber: 5476,
       workflow: 'CI Tests',
       status: 'completed',
       conclusion: 'failure',
       branch: 'main',
+      title: 'Fix authentication bug',
+      event: 'push',
+      actor: 'developer123',
       started: new Date(Date.now() - 300000).toISOString() // 5 minutes ago
     }
   ];
 
   const result = formatWorkflowList(workflows);
-  assert.ok(result.includes('12346'));
+  // Should NOT include the database ID
+  assert.ok(!result.includes('12346'));
+  // Should include display title
+  assert.ok(result.includes('Fix authentication bug'));
+  // Should include workflow name and run number
   assert.ok(result.includes('CI Tests'));
-  assert.ok(result.includes('main'));
+  assert.ok(result.includes('#5476'));
+  // Should include event type and actor
+  assert.ok(result.includes('Push'));
+  assert.ok(result.includes('developer123'));
   assert.ok(result.includes('❌')); // failed icon
-  assert.ok(result.includes('failure'));
+});
+
+test('formatWorkflowDisplay creates two-line format', () => {
+  const workflow = {
+    id: 12345,
+    runNumber: 100,
+    workflow: 'Build',
+    status: 'in_progress',
+    title: 'Add new feature',
+    event: 'workflow_dispatch',
+    actor: 'testuser',
+    started: new Date(Date.now() - 60000).toISOString() // 1 minute ago
+  };
+
+  const result = formatWorkflowDisplay(workflow);
+  const lines = result.split('\n');
+  assert.strictEqual(lines.length, 2);
+  // Line 1: status icon and title
+  assert.ok(lines[0].includes('⏳'));
+  assert.ok(lines[0].includes('Add new feature'));
+  // Line 2: workflow details
+  assert.ok(lines[1].includes('Build #100'));
+  assert.ok(lines[1].includes('Manual run'));
+  assert.ok(lines[1].includes('testuser'));
+  // Should include trigger time
+  assert.ok(lines[1].includes(' at '));
 });
 
 // Note: Full integration tests would require:

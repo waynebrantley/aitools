@@ -26,7 +26,7 @@ export function listRunningWorkflows(options = {}) {
   const { includeAll = false, includeFailed = false } = options;
 
   try {
-    const command = `gh run list --limit 20 --json databaseId,status,conclusion,event,createdAt,displayTitle,headBranch,workflowName,url,startedAt`;
+    const command = `gh run list --limit 20 --json databaseId,status,conclusion,event,createdAt,displayTitle,headBranch,workflowName,url,startedAt,number,actor`;
     const output = execSync(command, { encoding: 'utf-8' });
     const runs = JSON.parse(output);
 
@@ -48,12 +48,14 @@ export function listRunningWorkflows(options = {}) {
 
     return filtered.map(run => ({
       id: run.databaseId,
+      runNumber: run.number,
       workflow: run.workflowName,
       status: run.status,
       conclusion: run.conclusion,
       branch: run.headBranch,
       title: run.displayTitle,
       event: run.event,
+      actor: run.actor?.login || 'unknown',
       started: run.startedAt,
       url: run.url
     }));
@@ -61,6 +63,70 @@ export function listRunningWorkflows(options = {}) {
     console.error('❌ Failed to list workflows:', error.message);
     process.exit(1);
   }
+}
+
+/**
+ * Format event type for display
+ * @param {string} event - GitHub event type (e.g., 'pull_request', 'push')
+ * @returns {string} Human-readable event name
+ */
+function formatEventType(event) {
+  const eventMap = {
+    'pull_request': 'Pull request',
+    'push': 'Push',
+    'workflow_dispatch': 'Manual run',
+    'schedule': 'Scheduled',
+    'release': 'Release',
+    'issues': 'Issue',
+    'issue_comment': 'Issue comment',
+    'merge_group': 'Merge group'
+  };
+  return eventMap[event] || event;
+}
+
+/**
+ * Get status icon for workflow
+ * @param {Object} wf - Workflow object
+ * @returns {string} Status emoji
+ */
+function getStatusIcon(wf) {
+  if (wf.status === 'in_progress') return '⏳';
+  if (wf.status === 'queued') return '⏸️';
+  if (wf.status === 'completed' && wf.conclusion === 'failure') return '❌';
+  if (wf.status === 'completed' && wf.conclusion === 'success') return '✅';
+  return '⚪';
+}
+
+/**
+ * Format a timestamp for display
+ * @param {string} timestamp - ISO timestamp
+ * @returns {string} Human-readable time (e.g., "2:34 PM")
+ */
+function formatTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+/**
+ * Format a single workflow for display
+ * @param {Object} wf - Workflow object
+ * @returns {string} Formatted workflow string (2 lines)
+ */
+export function formatWorkflowDisplay(wf) {
+  const statusIcon = getStatusIcon(wf);
+  const eventDisplay = formatEventType(wf.event);
+  const elapsed = wf.started ? getElapsedTime(wf.started) : 'not started';
+  const triggerTime = wf.started ? formatTime(wf.started) : '';
+
+  // Line 1: Status icon + display title
+  const line1 = `${statusIcon} ${wf.title}`;
+
+  // Line 2: workflow name #runNumber: event by actor at time (elapsed)
+  const timePart = triggerTime ? ` at ${triggerTime}` : '';
+  const line2 = `   ${wf.workflow} #${wf.runNumber}: ${eventDisplay} by ${wf.actor}${timePart} (${elapsed})`;
+
+  return `${line1}\n${line2}`;
 }
 
 /**
@@ -73,26 +139,7 @@ export function formatWorkflowList(workflows) {
     return 'No workflows found.';
   }
 
-  const lines = workflows.map(wf => {
-    let statusIcon;
-    if (wf.status === 'in_progress') {
-      statusIcon = '⏳';
-    } else if (wf.status === 'queued') {
-      statusIcon = '⏸️';
-    } else if (wf.status === 'completed' && wf.conclusion === 'failure') {
-      statusIcon = '❌';
-    } else if (wf.status === 'completed' && wf.conclusion === 'success') {
-      statusIcon = '✅';
-    } else {
-      statusIcon = '⚪';
-    }
-
-    const elapsed = wf.started ? getElapsedTime(wf.started) : 'not started';
-    const statusText = wf.status === 'completed' ? `${wf.conclusion}` : wf.status;
-    return `${statusIcon} [${wf.id}] ${wf.workflow} (${wf.branch}) - ${statusText} - ${elapsed}`;
-  });
-
-  return lines.join('\n');
+  return workflows.map(wf => formatWorkflowDisplay(wf)).join('\n\n');
 }
 
 /**
