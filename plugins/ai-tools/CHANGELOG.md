@@ -1,6 +1,18 @@
 # AI Tools Plugin - Changelog
 
-## 2025-02-04
+## 0.6.0 — 2026-02-04
+
+### Fix globSync API usage on Windows (build-doctor, test-doctor)
+
+- Replaced invalid `nodir`/`ignore` options with clean `fs.globSync` calls — these npm `glob` options were silently ignored by the Node.js built-in
+- Normalize `cwd` paths to forward slashes for Windows compatibility
+- Removed unsupported frontmatter fields (`version`, `author`, `category`, `tags`, `recommended_skills`) from all skill files — only `description` and other [documented fields](https://code.claude.com/docs/en/skills#frontmatter-reference) are valid
+
+### create-pr: handle missing build frameworks (create-pr)
+
+- create-pr now asks the user instead of silently skipping when build-doctor reports "no frameworks detected"
+
+## 0.5.0 — 2026-02-04
 
 ### Subagent lifecycle and resource management (test-doctor, build-doctor, parallel-coding-workflow)
 
