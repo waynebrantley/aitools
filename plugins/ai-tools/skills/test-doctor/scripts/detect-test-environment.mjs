@@ -86,6 +86,9 @@ function createDetectionContext(projectRoot) {
     }
   }
 
+  // fs.globSync requires forward slashes in cwd on Windows (defensive)
+  const globCwd = projectRoot.replace(/\\/g, '/')
+
   return {
     packageJsonContent,
     projectRoot,
@@ -96,11 +99,7 @@ function createDetectionContext(projectRoot) {
       return readFileSync(join(projectRoot, relativePath), 'utf-8')
     },
     glob: (pattern) => {
-      return globSync(pattern, {
-        cwd: projectRoot,
-        nodir: true,
-        ignore: ['**/node_modules/**', '**/bin/**', '**/obj/**']
-      })
+      return globSync(pattern, { cwd: globCwd })
     }
   }
 }

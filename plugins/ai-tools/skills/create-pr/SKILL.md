@@ -25,6 +25,8 @@ The user wants to create a pull request targeting master.
 
    This skill automatically detects the project type, runs the appropriate build/lint/test commands, and fixes any issues it finds.
 
+   **If build-doctor reports "no frameworks detected"**: Do NOT silently skip this step. Ask the user whether the project has a build system that should be validated before creating the PR. The project may have build frameworks that detection missed.
+
 2. **Check git status** - Verify the current branch and ensure changes are committed:
    ```bash
    git status

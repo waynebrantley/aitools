@@ -58,12 +58,13 @@ function findTestFiles(projectRoot, adapter) {
 	const patterns = adapter.getTestFilePatterns()
 	const testFiles = []
 
+	// fs.globSync requires forward slashes in cwd on Windows (defensive)
+	const globCwd = projectRoot.replace(/\\/g, '/')
+
 	for (const pattern of patterns) {
 		const files = globSync(pattern, {
-			cwd: projectRoot,
-			absolute: true,
-			nodir: true,
-			ignore: ['**/node_modules/**', '**/bin/**', '**/obj/**', '**/dist/**']
+			cwd: globCwd,
+			absolute: true
 		})
 		testFiles.push(...files)
 	}
