@@ -8,7 +8,7 @@
 import { describe, it, mock } from 'node:test'
 import assert from 'node:assert/strict'
 import os from 'os'
-import { calculateOptimalParallel } from './calculate-parallelism.mjs'
+import { calculateOptimalParallel, parseMemReserve } from './calculate-parallelism.mjs'
 
 describe('calculateOptimalParallel', () => {
 	it('should calculate parallelism based on memory constraint', () => {
@@ -207,6 +207,104 @@ describe('calculateOptimalParallel', () => {
 
 		// 11GB / 3GB = 3.666... = floor(3.666) = 3
 		assert.equal(result.maxParallel, 3)
+	})
+})
+
+describe('parseMemReserve', () => {
+	it('should parse percentage values', () => {
+		assert.equal(parseMemReserve('10%', 32), 3.2)
+		assert.equal(parseMemReserve('25%', 16), 4)
+		assert.equal(parseMemReserve('0%', 32), 0)
+	})
+
+	it('should parse MB values', () => {
+		const result = parseMemReserve('512MB', 32)
+		assert.equal(result, 0.5)
+	})
+
+	it('should parse GB values', () => {
+		assert.equal(parseMemReserve('2GB', 32), 2)
+		assert.equal(parseMemReserve('1.5gb', 16), 1.5)
+	})
+
+	it('should parse plain numbers as GB', () => {
+		assert.equal(parseMemReserve('3', 32), 3)
+		assert.equal(parseMemReserve(2, 16), 2)
+	})
+
+	it('should throw on invalid percentage', () => {
+		assert.throws(() => parseMemReserve('100%', 32), /Invalid/)
+		assert.throws(() => parseMemReserve('-5%', 32), /Invalid/)
+		assert.throws(() => parseMemReserve('abc%', 32), /Invalid/)
+	})
+
+	it('should throw on negative values', () => {
+		assert.throws(() => parseMemReserve('-2GB', 32), /Invalid/)
+		assert.throws(() => parseMemReserve('-1', 32), /Invalid/)
+	})
+})
+
+describe('calculateOptimalParallel with memory reserve', () => {
+	it('should subtract reserved memory from available', () => {
+		const resources = {
+			totalMemGB: 32,
+			availableMemGB: 24,
+			cpuCores: 16,
+			cpuLoad: 2,
+		}
+
+		const result = calculateOptimalParallel(resources, 3, 3) // reserve 3GB
+
+		// (24 - 3) / 3 = 7, capped at 6
+		assert.equal(result.maxParallel, 6)
+		assert.equal(result.memReserveGB, 3)
+		assert.equal(result.effectiveMemGB, 21)
+	})
+
+	it('should reduce parallelism when reserve eats into available memory', () => {
+		const resources = {
+			totalMemGB: 16,
+			availableMemGB: 12,
+			cpuCores: 8,
+			cpuLoad: 1,
+		}
+
+		const result = calculateOptimalParallel(resources, 3, 3) // reserve 3GB
+
+		// (12 - 3) / 3 = 3
+		assert.equal(result.maxParallel, 3)
+		assert.equal(result.limitingFactor, 'memory')
+	})
+
+	it('should floor effective memory at zero when reserve exceeds available', () => {
+		const resources = {
+			totalMemGB: 8,
+			availableMemGB: 2,
+			cpuCores: 4,
+			cpuLoad: 0,
+		}
+
+		const result = calculateOptimalParallel(resources, 3, 5) // reserve more than available
+
+		// max(0, 2 - 5) = 0, 0 / 3 = 0, enforced minimum = 2
+		assert.equal(result.maxParallel, 2)
+		assert.equal(result.effectiveMemGB, 0)
+		assert.equal(result.limitingFactor, 'minimum enforced')
+	})
+
+	it('should default to zero reserve when not specified', () => {
+		const resources = {
+			totalMemGB: 16,
+			availableMemGB: 12,
+			cpuCores: 8,
+			cpuLoad: 1,
+		}
+
+		const result = calculateOptimalParallel(resources, 3)
+
+		assert.equal(result.memReserveGB, 0)
+		assert.equal(result.effectiveMemGB, 12)
+		assert.equal(result.maxParallel, 4)
 	})
 })
 

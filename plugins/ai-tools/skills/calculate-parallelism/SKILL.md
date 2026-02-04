@@ -29,11 +29,16 @@ Prevents resource exhaustion by:
 ### Basic Usage
 
 ```bash
-# Default: uses 3GB per subagent
+# Default: uses 3GB per subagent, reserves 10% of total memory
 node calculate-parallelism.mjs
 
 # Custom memory per subagent
 node calculate-parallelism.mjs --mem-per-agent=2
+
+# Custom memory reserve (percentage or absolute)
+node calculate-parallelism.mjs --mem-reserve=20%
+node calculate-parallelism.mjs --mem-reserve=2GB
+node calculate-parallelism.mjs --mem-reserve=512MB
 
 # JSON output for programmatic use
 node calculate-parallelism.mjs --json
@@ -73,10 +78,11 @@ Limit:   coordination overhead (capped at 6)
 
 ### Calculation Algorithm
 
-1. **Memory Constraint**: `available_memory_gb / mem_per_agent` (default: 3GB/agent)
-2. **CPU Constraint**: `physical_cpu_cores`
-3. **Load Adjustment**: Reduce by 50% if `load_average >= cpu_cores`
-4. **Apply Limits**: `clamp(min(memory, cpu) × load_factor, MIN=2, MAX=6)`
+1. **Memory Reserve**: Subtract reserved memory from available (default: 10% of total)
+2. **Memory Constraint**: `(available_memory_gb - reserved) / mem_per_agent` (default: 3GB/agent)
+3. **CPU Constraint**: `physical_cpu_cores`
+4. **Load Adjustment**: Reduce by 50% if `load_average >= cpu_cores`
+5. **Apply Limits**: `clamp(min(memory, cpu) × load_factor, MIN=2, MAX=6)`
 
 **Limiting Factors:**
 - `"memory"` - Available memory is bottleneck
@@ -103,6 +109,10 @@ Limit:   coordination overhead (capped at 6)
 # Override memory per subagent (default: 3GB)
 --mem-per-agent=<number>
 
+# Memory to keep free (default: 10%)
+# Accepts: percentage (10%), megabytes (512MB), gigabytes (2GB), or plain number (GB)
+--mem-reserve=<value>
+
 # JSON output
 --json
 ```
@@ -110,10 +120,11 @@ Limit:   coordination overhead (capped at 6)
 ### Constants
 
 ```javascript
-DEFAULT_MEM_PER_SUBAGENT_GB = 3  // Memory per subagent
-MIN_PARALLEL = 2                 // Minimum parallelism
-MAX_PARALLEL_CAP = 6             // Maximum parallelism
-LOAD_REDUCTION_FACTOR = 50       // Reduction % when saturated
+DEFAULT_MEM_PER_SUBAGENT_GB = 3   // Memory per subagent
+DEFAULT_MEM_RESERVE_PERCENT = 10  // % of total memory to keep free
+MIN_PARALLEL = 2                  // Minimum parallelism
+MAX_PARALLEL_CAP = 6              // Maximum parallelism
+LOAD_REDUCTION_FACTOR = 50        // Reduction % when saturated
 ```
 
 ---

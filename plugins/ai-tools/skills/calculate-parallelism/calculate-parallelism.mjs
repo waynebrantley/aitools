@@ -11,6 +11,7 @@ import { execSync } from 'child_process'
 
 // Resource allocation constants (can be overridden via CLI args)
 const DEFAULT_MEM_PER_SUBAGENT_GB = 3 // Default GB of memory per subagent
+const DEFAULT_MEM_RESERVE_PERCENT = 10 // Default % of total memory to keep free
 const MIN_PARALLEL = 2 // Minimum parallel subagents
 const MAX_PARALLEL_CAP = 6 // Maximum parallel subagents (coordination overhead)
 const LOAD_REDUCTION_FACTOR = 50 // Reduce by 50% if system is saturated
@@ -66,16 +67,59 @@ export function detectResources() {
 }
 
 /**
+ * Parse a memory reserve value into GB.
+ * Accepts: "10%" (percentage of total), "500MB", "2GB", or a plain number (treated as GB).
+ * @param {string|number} value - The reserve value to parse
+ * @param {number} totalMemGB - Total system memory in GB (needed for percentage calculation)
+ * @returns {number} Reserved memory in GB
+ */
+export function parseMemReserve(value, totalMemGB) {
+	const str = String(value).trim()
+
+	if (str.endsWith('%')) {
+		const pct = parseFloat(str)
+		if (isNaN(pct) || pct < 0 || pct >= 100) {
+			throw new Error(`Invalid memory reserve percentage: ${str}`)
+		}
+		return (totalMemGB * pct) / 100
+	}
+
+	if (str.toLowerCase().endsWith('mb')) {
+		const mb = parseFloat(str)
+		if (isNaN(mb) || mb < 0) {
+			throw new Error(`Invalid memory reserve value: ${str}`)
+		}
+		return mb / 1024
+	}
+
+	if (str.toLowerCase().endsWith('gb')) {
+		const gb = parseFloat(str)
+		if (isNaN(gb) || gb < 0) {
+			throw new Error(`Invalid memory reserve value: ${str}`)
+		}
+		return gb
+	}
+
+	const gb = parseFloat(str)
+	if (isNaN(gb) || gb < 0) {
+		throw new Error(`Invalid memory reserve value: ${str}`)
+	}
+	return gb
+}
+
+/**
  * Calculate optimal parallelism based on resources
  * @param {Object} resources - System resources
  * @param {number} memPerSubagentGB - Memory per subagent in GB
+ * @param {number} memReserveGB - Memory to keep free in GB
  * @returns {Object} Calculation results
  */
-export function calculateOptimalParallel(resources, memPerSubagentGB = DEFAULT_MEM_PER_SUBAGENT_GB) {
+export function calculateOptimalParallel(resources, memPerSubagentGB = DEFAULT_MEM_PER_SUBAGENT_GB, memReserveGB = 0) {
 	const { totalMemGB, availableMemGB, cpuCores, cpuLoad } = resources
 
-	// 1. Memory constraint: Available GB / Memory per subagent
-	const memLimit = Math.floor(availableMemGB / memPerSubagentGB)
+	// 1. Memory constraint: (Available GB - reserved) / Memory per subagent
+	const effectiveMemGB = Math.max(0, availableMemGB - memReserveGB)
+	const memLimit = Math.floor(effectiveMemGB / memPerSubagentGB)
 
 	// 2. CPU constraint: Don't exceed physical cores
 	const cpuLimit = cpuCores
@@ -110,6 +154,8 @@ export function calculateOptimalParallel(resources, memPerSubagentGB = DEFAULT_M
 		maxParallel,
 		totalMemGB,
 		availableMemGB,
+		memReserveGB,
+		effectiveMemGB,
 		cpuCores,
 		cpuLoad,
 		loadStatus,
@@ -122,13 +168,15 @@ export function calculateOptimalParallel(resources, memPerSubagentGB = DEFAULT_M
  * @param {Object} result - Calculation results
  */
 function printReport(result) {
-	const { maxParallel, totalMemGB, availableMemGB, cpuCores, cpuLoad, loadStatus, limitingFactor } = result
+	const { maxParallel, totalMemGB, availableMemGB, memReserveGB, effectiveMemGB, cpuCores, cpuLoad, loadStatus, limitingFactor } = result
+
+	const reserveLabel = memReserveGB > 0 ? ` (${memReserveGB.toFixed(1)}GB reserved, ${effectiveMemGB.toFixed(1)}GB usable)` : ''
 
 	console.log(`${colors.blue}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`)
 	console.log(`${colors.blue}📊 Resource Analysis${colors.reset}`)
 	console.log(`${colors.blue}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`)
 	console.log(
-		`Memory:  ${colors.green}${availableMemGB}GB${colors.reset} available / ${totalMemGB}GB total`
+		`Memory:  ${colors.green}${availableMemGB}GB${colors.reset} available / ${totalMemGB}GB total${reserveLabel}`
 	)
 	console.log(`CPU:     ${colors.green}${cpuCores}${colors.reset} cores, load average: ${cpuLoad} (${loadStatus})`)
 	console.log(`Limit:   ${colors.yellow}${limitingFactor}${colors.reset}`)
@@ -162,17 +210,38 @@ function parseArgs() {
 		}
 	}
 
-	return { jsonOutput, memPerSubagentGB }
+	// Parse --mem-reserve argument (default: 10%)
+	let memReserve = `${DEFAULT_MEM_RESERVE_PERCENT}%`
+	const reserveArgIndex = args.findIndex(arg => arg.startsWith('--mem-reserve'))
+	if (reserveArgIndex !== -1) {
+		const reserveArg = args[reserveArgIndex]
+		if (reserveArg.includes('=')) {
+			memReserve = reserveArg.split('=')[1]
+		} else if (args[reserveArgIndex + 1]) {
+			memReserve = args[reserveArgIndex + 1]
+		}
+	}
+
+	return { jsonOutput, memPerSubagentGB, memReserve }
 }
 
 /**
  * Main execution
  */
 function main() {
-	const { jsonOutput, memPerSubagentGB } = parseArgs()
+	const { jsonOutput, memPerSubagentGB, memReserve } = parseArgs()
 
 	const resources = detectResources()
-	const result = calculateOptimalParallel(resources, memPerSubagentGB)
+
+	let memReserveGB
+	try {
+		memReserveGB = parseMemReserve(memReserve, resources.totalMemGB)
+	} catch (err) {
+		console.error(`${colors.red}Error: ${err.message}${colors.reset}`)
+		process.exit(1)
+	}
+
+	const result = calculateOptimalParallel(resources, memPerSubagentGB, memReserveGB)
 
 	if (jsonOutput) {
 		// Output JSON for programmatic use
@@ -182,6 +251,8 @@ function main() {
 					max_parallel: result.maxParallel,
 					total_memory_gb: result.totalMemGB,
 					available_memory_gb: result.availableMemGB,
+					mem_reserve_gb: Math.round(result.memReserveGB * 100) / 100,
+					effective_memory_gb: Math.round(result.effectiveMemGB * 100) / 100,
 					cpu_cores: result.cpuCores,
 					cpu_load: result.cpuLoad,
 					limiting_factor: result.limitingFactor,

@@ -5,7 +5,7 @@ Analyzes available system resources and calculates optimal parallelism for test 
 ## Usage
 
 ```bash
-# Basic usage - displays formatted report
+# Basic usage - displays formatted report (reserves 10% memory by default)
 node calculate-parallelism.mjs
 
 # JSON output for programmatic use
@@ -14,6 +14,11 @@ node calculate-parallelism.mjs --json
 # Custom memory per subagent (default: 3GB)
 node calculate-parallelism.mjs --mem-per-agent=4
 node calculate-parallelism.mjs --mem-per-agent 5
+
+# Custom memory reserve (default: 10% of total)
+node calculate-parallelism.mjs --mem-reserve=20%
+node calculate-parallelism.mjs --mem-reserve=2GB
+node calculate-parallelism.mjs --mem-reserve=512MB
 ```
 
 ## How It Works
@@ -24,11 +29,12 @@ The script analyzes:
 - **CPU Load**: Current system load average
 
 It calculates optimal parallelism by:
-1. Computing memory-based limit: `availableMemory / memoryPerSubagent`
-2. Computing CPU-based limit: `cpuCores`
-3. Taking the minimum of the two
-4. Reducing by 50% if system is saturated (load ≥ cores)
-5. Applying hard caps: minimum 2, maximum 6
+1. Subtracting reserved memory from available (default: 10% of total)
+2. Computing memory-based limit: `(availableMemory - reserved) / memoryPerSubagent`
+3. Computing CPU-based limit: `cpuCores`
+4. Taking the minimum of the two
+5. Reducing by 50% if system is saturated (load ≥ cores)
+6. Applying hard caps: minimum 2, maximum 6
 
 ## Testing
 
