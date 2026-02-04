@@ -1,11 +1,5 @@
 ---
-version: 1.0.0
 description: Diagnose and fix test failures using resource-aware parallel subagents with automatic test framework detection
-author: Wayne Brantley
-category: Testing
-tags: [testing, parallel, automation, quality, debugging, diagnosis]
-recommended_skills:
-  - calculate-parallelism  # For automatic resource optimization
 ---
 
 # Test Doctor
@@ -170,6 +164,8 @@ For each file in error list:
    - Do NOT modify other files
    - Follow project standards (check CLAUDE.md)
    - Maintain test coverage
+   - Verify with: node scripts/verify-fix.mjs {file}
+   - Do NOT run whole-project commands (eslint ., eslint src, tsc)
 
    Success: Zero test failures, type errors, and lint errors
    ```
@@ -196,6 +192,8 @@ If files remain, spawn subagents for remaining files.
 
 ### 7. Final Validation
 
+**IMPORTANT**: Run this as a single sequential command directly in the main agent. Do NOT spawn subagents or use the Task tool for this step.
+
 Run complete validation after ALL files processed:
 
 ```bash
@@ -204,7 +202,7 @@ node scripts/run-final-validation.mjs
 
 **Expected**: All tests passing, zero type/lint errors.
 
-If issues remain: Identify regressions, spawn fix subagents, repeat (max 2 cycles).
+If issues remain: Identify regressions, spawn fix subagents for the specific failing files, then re-run this validation step (max 2 cycles).
 
 ### 8. Skipped Tests Check
 
@@ -219,6 +217,13 @@ If found, ask user if they want to fix and re-enable them.
 ---
 
 ## Resource Management
+
+### Subagent Lifecycle
+
+- **Do NOT use `run_in_background: true`** when spawning fix subagents. Always use foreground Task calls so you know exactly when each agent completes.
+- **Wait for ALL subagents to complete** before proceeding to the next phase (e.g., all fix agents must finish before running Progress Verification or Final Validation).
+- **Track active agents**: When spawning parallel agents, send all Task calls in a single message. The response will contain all results, confirming they are complete.
+- **No orphaned agents**: Never move to Final Validation while fix subagents are still running.
 
 ### Key Constraints
 
@@ -386,7 +391,7 @@ Each fix subagent MUST:
 1. **Read Context**: Source file, test file, related components
 2. **Apply Standards**: Check CLAUDE.md, follow best practices
 3. **Fix Systematically**: Test failures → Type errors → Lint errors
-4. **Verify Locally**: Run validation before reporting completion
+4. **Verify Using verify-fix.mjs**: Run `node scripts/verify-fix.mjs {file}` to validate the fix. Do NOT run `eslint .`, `eslint src`, or any whole-project validation commands. Always target the specific file being fixed.
 5. **Report Status**: Issues fixed, issues remaining, blockers
 
 ---
@@ -407,6 +412,7 @@ Each fix subagent MUST:
 - ❌ **Stop after fixing ONE file** (process ALL!)
 - ❌ Exceed MAX_PARALLEL limit
 - ❌ Skip file-level verification
+- ❌ Run whole-project commands in subagents (`eslint .`, `eslint src`, `tsc`) — always target the specific file
 - ❌ Delete tests to "fix" failures
 - ❌ Modify multiple files per subagent
 

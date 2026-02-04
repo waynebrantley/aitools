@@ -1,11 +1,5 @@
 ---
-version: 1.0.0
 description: Diagnose and fix build errors using resource-aware parallel subagents with automatic framework detection
-author: Wayne Brantley
-category: Build
-tags: [build, parallel, automation, quality, debugging, compilation]
-recommended_skills:
-  - calculate-parallelism  # For automatic resource optimization
 ---
 
 # Build Doctor
@@ -303,6 +297,8 @@ If files remain, spawn subagents for remaining files.
 
 ### 7. Final Validation
 
+**IMPORTANT**: Run this as a single sequential command directly in the main agent. Do NOT spawn subagents or use the Task tool for this step.
+
 Run complete validation after ALL files processed:
 
 ```bash
@@ -336,6 +332,13 @@ node scripts/run-final-build.mjs '<detection-object-json>'
 ---
 
 ## Resource Management
+
+### Subagent Lifecycle
+
+- **Do NOT use `run_in_background: true`** when spawning fix subagents. Always use foreground Task calls so you know exactly when each agent completes.
+- **Wait for ALL subagents to complete** before proceeding to the next phase (e.g., all fix agents must finish before running Progress Verification or Final Validation).
+- **Track active agents**: When spawning parallel agents, send all Task calls in a single message. The response will contain all results, confirming they are complete.
+- **No orphaned agents**: Never move to Final Validation while fix subagents are still running.
 
 ### Key Constraints
 
@@ -522,7 +525,7 @@ Each fix subagent MUST:
 1. **Read Context**: Source file, related files, project configuration
 2. **Apply Standards**: Check CLAUDE.md, follow best practices
 3. **Fix Systematically**: Build errors → Type errors → Lint errors
-4. **Verify Locally**: Run validation before reporting completion
+4. **Verify Using verify-fix.mjs**: Run `node scripts/verify-fix.mjs {file}` to validate the fix. Do NOT run `eslint .`, `eslint src`, `tsc`, or any whole-project commands. Always target the specific file being fixed. (.NET exception: skip verification during fixing phase)
 5. **Report Status**: Issues fixed, issues remaining, blockers
 
 ---
@@ -544,6 +547,7 @@ Each fix subagent MUST:
 - ❌ **Stop after fixing ONE file** (process ALL!)
 - ❌ Exceed MAX_PARALLEL limit
 - ❌ Skip file-level verification (TypeScript only - .NET verifies at end)
+- ❌ Run whole-project commands in subagents (`eslint .`, `eslint src`, `tsc`) — always target the specific file
 - ❌ **Run `dotnet build` during .NET fixing phase** (wait for final validation)
 - ❌ **Accept warnings just because they "don't block build"** (fix ALL warnings!)
 - ❌ Comment out code to "fix" build errors

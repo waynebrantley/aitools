@@ -1,11 +1,5 @@
 ---
-version: 1.0.0
 description: Execute complex multi-task workflows using parallel subagent coordination with automatic resource optimization
-author: Wayne Brantley
-category: Workflow Orchestration
-tags: [parallel, orchestration, workflow, coordination, performance, automation]
-recommended_skills:
-  - calculate-parallelism  # For automatic resource optimization
 ---
 
 # Parallel Coding Workflow
@@ -99,21 +93,28 @@ Mark each todo as `in_progress` when spawning its subagent, and `completed` when
 - Minimum 2, maximum 6 parallel agents
 - Auto-reduces by 50% if system is saturated (with calculate-parallelism)
 
+### Subagent Lifecycle
+
+- **Do NOT use `run_in_background: true`** when spawning subagents. Always use foreground Task calls so you know exactly when each agent completes.
+- **Wait for ALL subagents in a phase to complete** before proceeding to the next phase.
+- **Track active agents**: When spawning parallel agents, send all Task calls in a single message. The response will contain all results, confirming they are complete.
+- **No orphaned agents**: Never move between phases while subagents are still running.
+
 ### Phase Rules
 
 **Phase 1: Parallel Coding**
 - Launch up to MAX_PARALLEL subagents concurrently
 - Each subagent focuses on coding only (NO testing)
-- Wait for ALL coding to complete before testing
+- Wait for ALL coding subagents to complete before moving to Phase 2
 
 **Phase 2: Consolidated Testing**
-- Single test subagent validates all changes
+- Single test subagent validates all changes (do NOT spawn multiple test agents)
 - Collects comprehensive failure reports
 
 **Phase 3: Iterative Fixes**
 - Spawn individual fix subagents for failures (respect MAX_PARALLEL)
 - Fix agents code only (NO testing)
-- Return to Phase 2 and repeat until zero errors
+- Wait for ALL fix subagents to complete, then return to Phase 2
 
 ---
 
