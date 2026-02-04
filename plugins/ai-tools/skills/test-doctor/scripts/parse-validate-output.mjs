@@ -8,6 +8,7 @@
 
 import fs from 'fs'
 import readline from 'readline'
+import { fileURLToPath } from 'url'
 
 // ANSI colors for output
 const colors = {
@@ -172,6 +173,6 @@ export async function main() {
 }
 
 // Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	main()
 }

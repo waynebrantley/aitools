@@ -25,6 +25,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs'
+import { fileURLToPath } from 'url'
 
 /**
  * Read file list from text file (one path per line)
@@ -96,7 +97,7 @@ function main() {
 }
 
 // Execute
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main()
 }
 

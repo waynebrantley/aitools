@@ -14,6 +14,7 @@
  */
 
 import { getWorkflowInfo } from './get-workflow-info.mjs';
+import { fileURLToPath } from 'url';
 
 const DEFAULT_POLL_INTERVAL = 15; // seconds
 
@@ -53,7 +54,7 @@ export async function waitForWorkflow(runId, pollInterval = DEFAULT_POLL_INTERVA
 }
 
 // CLI usage
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {

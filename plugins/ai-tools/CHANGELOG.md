@@ -1,5 +1,15 @@
 # AI Tools Plugin - Changelog
 
+## 0.7.0 — 2026-02-04
+
+### Fix main entry point guards on Windows (all skills)
+
+- All 16 `.mjs` scripts used entry point guards that silently failed on Windows, causing scripts to produce no output when run directly
+- Two broken patterns replaced with cross-platform `process.argv[1] === fileURLToPath(import.meta.url)`:
+  - `process.argv[1] === new URL(import.meta.url).pathname` — pathname has leading `/` and forward slashes on Windows
+  - `` import.meta.url === `file://${process.argv[1]}` `` — argv uses backslashes, import.meta.url uses forward slashes
+- This was the root cause of workflow-doctor scripts producing no output during create-pr, causing the agent to bypass the scripts and run raw `gh` commands
+
 ## 0.6.0 — 2026-02-04
 
 ### Fix globSync API usage on Windows (build-doctor, test-doctor)

@@ -14,6 +14,7 @@
  */
 
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 /**
  * Get failed job information from a workflow run
@@ -110,7 +111,7 @@ export function getWorkflowLogs(runId) {
 }
 
 // CLI usage
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {

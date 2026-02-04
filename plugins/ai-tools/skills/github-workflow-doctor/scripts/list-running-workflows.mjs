@@ -14,6 +14,7 @@
  */
 
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 /**
  * List workflows in the repository
@@ -160,7 +161,7 @@ function getElapsedTime(startedAt) {
 }
 
 // CLI usage
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const options = {
     includeAll: process.argv.includes('--all'),
     includeFailed: process.argv.includes('--include-failed')

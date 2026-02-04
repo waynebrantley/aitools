@@ -22,6 +22,7 @@
 import { execSync } from 'child_process'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
+import { fileURLToPath } from 'url'
 
 // Import adapters
 import { DotNetAdapter } from './adapters/dotnet.mjs'
@@ -182,6 +183,6 @@ function main() {
 }
 
 // Execute
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main()
 }

@@ -10,6 +10,7 @@
  */
 
 import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 export function readFileList(filePath) {
   try {
@@ -39,7 +40,7 @@ export function calculateProgress(initialFiles, fixedFiles) {
 }
 
 // Main execution
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (process.argv.length < 4) {
     console.error('Usage: node verify-progress.mjs <initial-files-list> <fixed-files-list>');
     process.exit(2);

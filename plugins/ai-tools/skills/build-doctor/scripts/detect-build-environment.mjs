@@ -337,7 +337,7 @@ function detectBuildEnvironment(startDir = process.cwd(), walkUp = false) {
 }
 
 // Main execution
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2)
   let startDir = null
   let walkUp = false

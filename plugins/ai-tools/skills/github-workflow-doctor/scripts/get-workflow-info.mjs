@@ -15,6 +15,7 @@
  */
 
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 /**
  * Get workflow run information from GitHub
@@ -55,7 +56,7 @@ export function getWorkflowInfo(runId, workflowName = null) {
 }
 
 // CLI usage
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {

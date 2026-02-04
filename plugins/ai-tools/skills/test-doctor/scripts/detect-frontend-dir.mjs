@@ -74,7 +74,7 @@ export function detectTools(frontendDir) {
 }
 
 // Main execution (only when run directly)
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const frontendDir = detectFrontendDir();
   const tools = detectTools(frontendDir);
 
