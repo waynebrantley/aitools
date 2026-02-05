@@ -557,6 +557,17 @@ Each fix subagent MUST:
 
 ## Error Handling
 
+**CRITICAL: Do NOT work around script failures.**
+
+If any script in this skill produces no output, fails, or returns unexpected results:
+
+1. **Report the problem** to the user immediately
+2. **Do NOT** invent workarounds like running alternative commands directly
+3. **Do NOT** silently continue with different approaches
+
+If a script fails, ask the user how to proceed before continuing.
+
+**Subagent and Runtime Errors:**
 - **Subagent Timeout**: Kill, log, retry once at end of queue
 - **Persistent Failures**: After 3 attempts, mark for manual review
 - **Regression Detected**: Spawn targeted fix subagents (max 2 cycles)

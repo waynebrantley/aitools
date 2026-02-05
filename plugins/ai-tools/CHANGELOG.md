@@ -8,6 +8,13 @@
 - All 16 scripts now use `resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))` to normalize both paths before comparison
 - Added `resolve` import from 'path' where needed
 
+## 0.7.2 — 2026-02-05
+
+### Add script failure error handling guidance (all doctor skills)
+
+- All three doctor skills (build-doctor, test-doctor, github-workflow-doctor) now explicitly instruct agents NOT to work around script failures
+- When scripts produce no output or fail, agents must report the issue and ask the user — not silently invent workarounds like running raw CLI commands
+
 ## 0.7.0 — 2026-02-04
 
 ### Fix main entry point guards on Windows (all skills)

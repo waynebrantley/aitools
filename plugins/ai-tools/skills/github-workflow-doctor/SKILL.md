@@ -258,6 +258,35 @@ If the workflow passes after a fix:
 - Final duration
 - Workflow URL
 
+## Error Handling
+
+**CRITICAL: Do NOT work around script failures.**
+
+If any script in this skill produces no output, fails, or returns unexpected results:
+
+1. **Report the problem** to the user immediately
+2. **Do NOT** invent workarounds like running raw `gh` commands directly
+3. **Do NOT** silently continue with alternative approaches
+
+Example of what NOT to do:
+```
+❌ "The scripts didn't produce output. Let me check the runs directly with gh."
+```
+
+Instead:
+```
+✅ "The get-workflow-info.mjs script produced no output. This may indicate a bug in the skill. Would you like me to investigate or should we try a different approach?"
+```
+
+If a script fails, ask the user how to proceed:
+<ask-user-question>
+"A skill script failed to produce output. What would you like to do?"
+Options:
+- "Investigate the script failure" - Check if the script has errors
+- "Try running the script again" - Retry the same command
+- "Exit the skill" - Stop and report the issue
+</ask-user-question>
+
 ## Notes
 
 - The skill uses the `gh` CLI tool, which must be installed and authenticated
