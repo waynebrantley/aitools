@@ -1,9 +1,5 @@
 ---
-version: 1.0.0
 description: Address unresolved review comments on GitHub pull requests
-author: Wayne Brantley
-category: Code Review
-tags: [github, pull-request, code-review, automation]
 args:
   - name: selection
     description: Comment selection (e.g., "1,3", "1-5", "all") - optional, will prompt if not provided
@@ -229,6 +225,18 @@ node scripts/get-code-context.mjs <file> <line> [--context=3]
 
 ## Error Handling
 
+**CRITICAL: Do NOT work around script failures.**
+
+If any script in this skill produces no output, fails, or returns unexpected results:
+
+1. **Report the problem** to the user immediately
+2. **Do NOT** invent workarounds like running alternative commands directly
+3. **Do NOT** silently continue with different approaches
+
+If a script fails, ask the user how to proceed before continuing.
+
+**Common Errors:**
+
 | Error | Resolution |
 |-------|------------|
 | No PR found | `gh pr create` or push branch first |
@@ -269,8 +277,3 @@ This skill is used by **pr-doctor** as part of the complete PR health workflow:
 - **calculate-parallelism** - For optimal parallel execution
 - **test-doctor** - For running tests on modified files (optional)
 
----
-
-**Version**: 1.0.0
-**License**: MIT
-**Author**: Wayne Brantley

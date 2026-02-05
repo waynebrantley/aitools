@@ -1,12 +1,12 @@
 # AI Tools Plugin - Changelog
 
-## 0.7.1 — 2026-02-05
+## 0.7.3 — 2026-02-05
 
-### Fix entry point guards for mixed-slash paths (all skills)
+### Fix new skills to match project standards (address-pr-comments, pr-doctor)
 
-- The 0.7.0 fix was insufficient: when skills are invoked from SKILL.md with paths containing mixed slashes (e.g., `C:\...\0.5.0/skills/...`), `process.argv[1]` preserves the mixed slashes but `fileURLToPath()` normalizes to all backslashes on Windows
-- All 16 scripts now use `resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))` to normalize both paths before comparison
-- Added `resolve` import from 'path' where needed
+- Removed unsupported frontmatter fields (`version`, `author`, `category`, `tags`, `recommended_skills`) — same fix as 0.6.0
+- Added "do NOT work around script failures" error handling guidance — same fix as 0.7.2
+- Removed trailing version/author footer blocks
 
 ## 0.7.2 — 2026-02-05
 
@@ -14,6 +14,14 @@
 
 - All three doctor skills (build-doctor, test-doctor, github-workflow-doctor) now explicitly instruct agents NOT to work around script failures
 - When scripts produce no output or fail, agents must report the issue and ask the user — not silently invent workarounds like running raw CLI commands
+
+## 0.7.1 — 2026-02-05
+
+### Fix entry point guards for mixed-slash paths (all skills)
+
+- The 0.7.0 fix was insufficient: when skills are invoked from SKILL.md with paths containing mixed slashes (e.g., `C:\...\0.5.0/skills/...`), `process.argv[1]` preserves the mixed slashes but `fileURLToPath()` normalizes to all backslashes on Windows
+- All 16 scripts now use `resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))` to normalize both paths before comparison
+- Added `resolve` import from 'path' where needed
 
 ## 0.7.0 — 2026-02-04
 

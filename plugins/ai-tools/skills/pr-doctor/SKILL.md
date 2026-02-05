@@ -1,13 +1,5 @@
 ---
-version: 1.0.0
 description: Complete PR health check - track workflows, fix failures, and address review comments
-author: Wayne Brantley
-category: Code Review
-tags: [github, pull-request, workflows, code-review, automation, ci-cd]
-recommended_skills:
-  - github-workflow-doctor
-  - address-pr-comments
-  - test-doctor
 args:
   - name: pr_number
     description: PR number to check (optional, defaults to current branch's PR)
@@ -301,6 +293,18 @@ NOT READY TO MERGE
 
 ## Error Handling
 
+**CRITICAL: Do NOT work around script failures.**
+
+If any script in this skill produces no output, fails, or returns unexpected results:
+
+1. **Report the problem** to the user immediately
+2. **Do NOT** invent workarounds like running alternative commands directly
+3. **Do NOT** silently continue with different approaches
+
+If a script fails, ask the user how to proceed before continuing.
+
+**Common Errors:**
+
 | Error | Resolution |
 |-------|------------|
 | No PR found | Create with `gh pr create` |
@@ -334,8 +338,3 @@ NOT READY TO MERGE
 - **test-doctor** - For fixing test failures locally (optional)
 - **calculate-parallelism** - For optimal parallel execution
 
----
-
-**Version**: 1.0.0
-**License**: MIT
-**Author**: Wayne Brantley
