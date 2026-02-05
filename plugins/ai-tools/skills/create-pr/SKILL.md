@@ -43,30 +43,24 @@ The user wants to create a pull request targeting master.
    git push -u origin HEAD
    ```
 
-4. **Create the pull request** - Create an initial PR with a placeholder title:
-   ```bash
-   gh pr create --base master --title "WIP: <branch-name>" --body "Creating PR..."
-   ```
-   Capture the PR number from the output.
+4. **Analyze the changes** - Gather information about what changed BEFORE creating the PR:
 
-5. **Analyze the changes** - Gather information about what changed:
-
-   a. Get the list of commits on this branch:
+   a. Get the list of commits on this branch (compared to master):
    ```bash
-   gh pr view --json commits --jq '.commits[].messageHeadline'
+   git log master..HEAD --oneline
    ```
 
    b. Get the diff summary:
    ```bash
-   gh pr diff --stat
+   git diff master --stat
    ```
 
    c. Get the full diff for context:
    ```bash
-   gh pr diff
+   git diff master
    ```
 
-6. **Generate title and description** - Based on the analysis, write both as a human developer would:
+5. **Generate title and description** - Based on the analysis, write both as a human developer would:
 
    - **Title**: Create a concise, descriptive title (max 72 characters) that:
      - Starts with the ticket number if present in the branch name (e.g., `MIN-1234`)
@@ -82,17 +76,19 @@ The user wants to create a pull request targeting master.
      - Don't over-explain. If the change is straightforward, a one-liner description is fine
      - Only mention testing if there's something the reviewer needs to know (e.g., "needs manual QA on Safari" or "added integration tests for the new endpoint")
 
-7. **Update the pull request** - Update the PR with the generated title and description:
+6. **Create the pull request** - Create the PR with the correct title and description from the start:
    ```bash
-   gh pr edit <PR-NUMBER> --title "<generated-title>" --body "<generated-description>"
+   gh pr create --base master --title "<generated-title>" --body "<generated-description>"
    ```
 
-8. **Report success** - Show the user:
+   **IMPORTANT**: Create the PR with the final title immediately. Do NOT create with a placeholder title and edit later — GitHub workflows trigger on PR creation and will validate the title before any edit can occur.
+
+7. **Report success** - Show the user:
    - The PR URL
    - The generated title
    - A summary of what was included in the description
 
-9. **Run workflow doctor** - Monitor the GitHub Actions workflow triggered by the PR:
+8. **Run workflow doctor** - Monitor the GitHub Actions workflow triggered by the PR:
 
    Get the head commit SHA from the PR, then find the workflow run for that commit:
    ```bash

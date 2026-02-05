@@ -1,5 +1,14 @@
 # AI Tools Plugin - Changelog
 
+## 0.7.4 — 2026-02-05
+
+### Create PR with correct title from the start (create-pr)
+
+- Reordered workflow: analyze changes and generate title/description BEFORE creating the PR
+- PR is now created with the final title immediately, not a placeholder that gets edited
+- Fixes issue where GitHub workflows would validate the placeholder title before the edit occurred
+- Uses `git log/diff` instead of `gh pr view/diff` since PR doesn't exist yet during analysis
+
 ## 0.7.3 — 2026-02-05
 
 ### Fix new skills to match project standards (address-pr-comments, pr-doctor)
