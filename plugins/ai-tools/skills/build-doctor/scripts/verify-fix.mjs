@@ -194,8 +194,8 @@ function main() {
   process.exit(result.fixed || result.deferredVerification ? 0 : 1)
 }
 
-// Execute
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Execute - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   main()
 }
 

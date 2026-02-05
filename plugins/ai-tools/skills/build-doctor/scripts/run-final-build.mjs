@@ -22,7 +22,7 @@
 
 import { execSync } from 'child_process'
 import { unlinkSync, existsSync } from 'fs'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 // Import adapters
@@ -283,7 +283,7 @@ function main() {
   }
 }
 
-// Execute
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Execute - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   main()
 }

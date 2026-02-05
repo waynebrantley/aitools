@@ -6,7 +6,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
@@ -73,8 +73,8 @@ export function detectTools(frontendDir) {
   return { hasPrettier, hasEslint, hasTsc };
 }
 
-// Main execution (only when run directly)
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Main execution (only when run directly) - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const frontendDir = detectFrontendDir();
   const tools = detectTools(frontendDir);
 

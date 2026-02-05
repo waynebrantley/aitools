@@ -369,7 +369,7 @@ export function main() {
 	}
 }
 
-// Run if executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Run if executed directly - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   main()
 }

@@ -9,6 +9,7 @@
 import fs from 'fs'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
+import { resolve } from 'path'
 
 // ANSI colors for output
 const colors = {
@@ -172,7 +173,7 @@ export async function main() {
 	}
 }
 
-// Run if executed directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Run if executed directly - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
 	main()
 }

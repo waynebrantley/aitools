@@ -286,8 +286,8 @@ function detectTestEnvironment(startDir = process.cwd(), walkUp = false) {
   return outputs
 }
 
-// Main execution
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// Main execution - normalize paths for cross-platform compatibility (Windows mixed slashes)
+if (resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const args = process.argv.slice(2)
   let startDir = null
   let walkUp = false

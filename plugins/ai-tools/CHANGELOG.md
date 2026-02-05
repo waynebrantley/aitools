@@ -1,5 +1,13 @@
 # AI Tools Plugin - Changelog
 
+## 0.7.1 — 2026-02-05
+
+### Fix entry point guards for mixed-slash paths (all skills)
+
+- The 0.7.0 fix was insufficient: when skills are invoked from SKILL.md with paths containing mixed slashes (e.g., `C:\...\0.5.0/skills/...`), `process.argv[1]` preserves the mixed slashes but `fileURLToPath()` normalizes to all backslashes on Windows
+- All 16 scripts now use `resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))` to normalize both paths before comparison
+- Added `resolve` import from 'path' where needed
+
 ## 0.7.0 — 2026-02-04
 
 ### Fix main entry point guards on Windows (all skills)
